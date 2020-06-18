@@ -1,0 +1,28 @@
+version: '3.3'
+services:
+
+  helper-redis:
+    image: 'redis:latest'
+    container_name: helper-redis
+    networks:
+      - helper-redis
+    hostname: helper-redis
+    restart: always
+    ports:
+      - '5179:6379'
+
+  helper-redis-ui:
+    container_name: helper-redis-ui
+    networks:
+      - helper-redis
+    hostname: helper-redis-ui
+    image: rediscommander/redis-commander:latest
+    restart: always
+    environment:
+    - REDIS_HOSTS=local:helper-redis:6379
+    ports:
+    - "5180:8081"
+
+networks:
+  helper-redis:
+    external: true
