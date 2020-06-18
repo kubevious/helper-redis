@@ -4,6 +4,6 @@ MY_DIR="$(dirname $MY_PATH)"
 cd $MY_DIR
 
 export REDIS_HOST=127.0.0.1
-export REDIS_PORT=4179
+export REDIS_PORT=5179
 
 mocha
