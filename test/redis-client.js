@@ -82,4 +82,33 @@ describe('Redis client', () => {
         client1.channels.should.containEql('channel*')
 
     })
+
+    it('pub-sub-test-1', () => {
+        const publishClient = new RedisClient(logger, null)
+        const subscribeClient = new RedisClient(logger, null)
+
+        var messagesReceived = [];
+        var subscription = subscribeClient.subscribe("channel_one", (channel, message) => {
+            messagesReceived.push(message);
+        })
+
+        return Promise.resolve()
+            .then(() => publishClient.publish('channel_one', '1'))
+            .then(() => publishClient.publish('channel_two', '2'))
+            .then(() => publishClient.publish('channel_one', '3'))
+            .then(() => Promise.timeout(1000))
+            .then(() => {
+                (messagesReceived.length).should.be.equal(2);
+            })
+            .then(() => subscription.close())
+            .then(() => publishClient.publish('channel_one', '4'))
+            .then(() => publishClient.publish('channel_one', '5'))
+            .then(() => Promise.timeout(1000))
+            .then(() => {
+                (messagesReceived.length).should.be.equal(2);
+            })
+            .then(() => publishClient.close())
+            .then(() => subscribeClient.close())
+            ;
+    })
 })
