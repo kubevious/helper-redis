@@ -66,4 +66,20 @@ describe('Redis client', () => {
             client.closeConnection()
         })
     })
+
+    it('publish messages to the channel', () => {
+        const client1 = new RedisClient(logger, null)
+        const client2 = new RedisClient(logger, null)
+        const client3 = new RedisClient(logger, null)
+        const client4 = new RedisClient(logger, null)
+
+        client1.subsribe('channel*')
+
+        client2.publishMessage('channel_two', '2')
+        client3.publishMessage('channel_three', '3')
+        client4.publishMessage('channel_four', '4')
+
+        client1.channels.should.containEql('channel*')
+
+    })
 })
