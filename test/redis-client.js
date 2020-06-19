@@ -5,40 +5,65 @@ const RedisClient = require("../lib/redis-client")
 
 describe('Redis client', () => {
     it('Constructor', () => {
-        const redisClient = new RedisClient(logger, null)
-    })
-
-    it('set and get values', () => {
         const client = new RedisClient(logger, null)
 
-        client.setValue('client', 'Danny')
+        client.closeConnection()
+    })
 
-        const result = client.getValue('client')
+    it('set value', () => {
+        const client = new RedisClient(logger, null)
 
-        result.then(data => {
-            (data).should.be.equal('Danny');
+        client.setValue('client', 'Danny').then(res => {
+            res.should.be.equal('OK')
+
+            client.closeConnection()
+        })
+    })
+
+    it('get value', () => {
+        const client = new RedisClient(logger, null)
+
+        client.setValue('client', 'Danny').then(res => {
+            const result = client.getValue('client')
+
+            result.then(data => {
+                (data).should.be.equal('Danny');
+
+                client.closeConnection()
+            })
         })
     })
 
     it('delete value', () => {
         const client = new RedisClient(logger, null)
 
-        client.setValue('town', 'NYC')
+        client.setValue('town', 'NYC').then(() => {
 
-        client.deleteValue('town')
+            client.deleteValue('town')
 
-        const result = client.getValue('town')
+            const result = client.getValue('town')
 
-        result.then((data) => {
-            should.equal(data, null)
+            result.then((data) => {
+                should.equal(data, null)
+
+                client.closeConnection()
+            })
         })
     })
 
-    it('subsribe client', () => {
-        const subsriber = new RedisClient(logger, null)
+    it('filter values keys', () => {
+        const client = new RedisClient(logger, null)
 
-        subsriber.subscribe('subscriber')
+        client.setValue('city:nyc', 'NYC')
+        client.setValue('city:la', 'LA')
+        client.setValue('city:moscow', 'Moscow')
+        client.setValue('town:rostov', 'Rostov')
 
-        subsriber.subscribersList()
+        client.filterValues('city:*', (keys) => {
+            keys.should.be.an.Array()
+            keys.length.should.be.equal(3)
+
+            client.closeConnection()
+        })
     })
 })
