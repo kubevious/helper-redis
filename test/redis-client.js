@@ -1,7 +1,8 @@
 const should = require('should');
 const _ = require('the-lodash');
 const logger = require('the-logger').setup('test', { pretty: true });
-const RedisClient = require("../lib/redis-client")
+const RedisClient = require('../lib/redis-client')
+const Promise = require('the-promise');
 
 describe('Redis client', () => {
     it('Constructor', () => {
@@ -13,42 +14,28 @@ describe('Redis client', () => {
     it('set value', () => {
         const client = new RedisClient(logger, null)
 
-        client.setValue('client', 'Danny').then(res => {
-            res.should.be.equal('OK')
-
-            client.closeConnection()
-        })
+        client.setValue('client', 'Danny')
+            .then(res => res.should.be.equal('OK'))
+            .then(() => client.closeConnection())
     })
 
     it('get value', () => {
         const client = new RedisClient(logger, null)
 
-        client.setValue('client', 'Danny').then(res => {
-            const result = client.getValue('client')
-
-            result.then(data => {
-                (data).should.be.equal('Danny');
-
-                client.closeConnection()
-            })
-        })
+        client.setValue('client', 'Danny')
+            .then(() => client.getValue('client'))
+            .then(result => result.should.be.equal('Danny'))
+            .then(() => client.closeConnection())
     })
 
     it('delete value', () => {
         const client = new RedisClient(logger, null)
 
-        client.setValue('town', 'NYC').then(() => {
-
-            client.deleteValue('town')
-
-            const result = client.getValue('town')
-
-            result.then((data) => {
-                should.equal(data, null)
-
-                client.closeConnection()
-            })
-        })
+        client.setValue('town', 'NYC')
+            .then(() => client.deleteValue('town'))
+            .then(() => client.getValue('town'))
+            .then(res => should.equal(res, null))
+            .then(() => client.closeConnection())
     })
 
     it('filter values keys', () => {
@@ -60,55 +47,38 @@ describe('Redis client', () => {
         client.setValue('town:rostov', 'Rostov')
 
         client.filterValues('city:*', (keys) => {
-            keys.should.be.an.Array()
-            keys.length.should.be.equal(3)
-
-            client.closeConnection()
+            return keys
         })
-    })
-
-    it('publish messages to the channel', () => {
-        const client1 = new RedisClient(logger, null)
-        const client2 = new RedisClient(logger, null)
-        const client3 = new RedisClient(logger, null)
-        const client4 = new RedisClient(logger, null)
-
-        client1.subsribe('channel*')
-
-        client2.publishMessage('channel_two', '2')
-        client3.publishMessage('channel_three', '3')
-        client4.publishMessage('channel_four', '4')
-
-        client1.channels.should.containEql('channel*')
-
+            .then((keys) => {
+                keys.should.be.an.Array()
+                keys.length.should.be.equal(3)
+            })
+            .then(() => client.closeConnection())
     })
 
     it('pub-sub-test-1', () => {
         const publishClient = new RedisClient(logger, null)
         const subscribeClient = new RedisClient(logger, null)
 
-        var messagesReceived = [];
-        var subscription = subscribeClient.subscribe("channel_one", (channel, message) => {
-            messagesReceived.push(message);
-        })
+        subscribeClient.subscribe('channel_one')
+            .then(() => publishClient.publishMessage('channel_one', '1'))
+            .then(() => publishClient.publishMessage('channel_two', '2'))
+            .then(() => publishClient.publishMessage('channel_one', '3'))
+            .then(() => Promise.timeout(1000))
 
-        return Promise.resolve()
-            .then(() => publishClient.publish('channel_one', '1'))
-            .then(() => publishClient.publish('channel_two', '2'))
-            .then(() => publishClient.publish('channel_one', '3'))
-            .then(() => Promise.timeout(1000))
-            .then(() => {
-                (messagesReceived.length).should.be.equal(2);
-            })
-            .then(() => subscription.close())
-            .then(() => publishClient.publish('channel_one', '4'))
-            .then(() => publishClient.publish('channel_one', '5'))
-            .then(() => Promise.timeout(1000))
-            .then(() => {
-                (messagesReceived.length).should.be.equal(2);
-            })
-            .then(() => publishClient.close())
-            .then(() => subscribeClient.close())
-            ;
+            .then(() => subscribeClient.getMessageList())
+            .then(list => (list.length).should.be.equal(2))
+            .then(() => subscribeClient.unsubscribe('channel_one'))
+
+            .then(() => publishClient.publishMessage('channel_one', '4'))
+            .then(() => publishClient.publishMessage('channel_one', '5'))
+
+            .then(() => subscribeClient.getMessageList())
+            .then((list) => (list.length).should.be.equal(2))
+
+            .then(() => publishClient.closeConnection())
+            .then(() => subscribeClient.closeConnection())
+
+            .catch(err => console.error(err))
     })
 })
