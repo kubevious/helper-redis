@@ -3,7 +3,7 @@ MY_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/$(basename "${BASH_SOURCE
 MY_DIR="$(dirname $MY_PATH)"
 cd $MY_DIR
 
-docker-compose up -d --build
+export REDIS_HOST=127.0.0.1
+export REDIS_PORT=5179
 
-echo "Redis Listening on: 5179"
-echo "Redis UI: http://localhost:5180"
+mocha
