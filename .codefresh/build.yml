@@ -23,7 +23,6 @@ steps:
       - ls -la ./redis
       - npm install
       - npm install --only=dev
-      - mkdir -p /codefresh/volume/runtime-data
 
   run_unit_test:
     title: Run Unit Tests
@@ -32,7 +31,7 @@ steps:
     working_directory: "${{clone}}"
     environment:
       - "REDIS_HOST=redis"
-      - "REDIS_PORT=5179"
+      - "REDIS_PORT=6379"
     commands:
       - pwd
       - ls -la
@@ -42,7 +41,11 @@ steps:
         redis:
           image: redis:latest
           ports:
-            - 5179
+            - 6379
       readiness:
-        image: redis:latest
-        timeoutSeconds: 90
+        timeoutSeconds: 30
+        periodSeconds: 5
+        image: busybox
+        commands:
+          - "nslookup redis"
+          - "nc -z redis 6379"

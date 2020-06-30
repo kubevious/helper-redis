@@ -14,7 +14,7 @@ describe('Redis client', () => {
     it('set value', () => {
         const client = new RedisClient(logger, null)
 
-        client.setValue('client', 'Danny')
+        return client.setValue('client', 'Danny')
             .then(res => res.should.be.equal('OK'))
             .then(() => client.closeConnection())
     })
@@ -22,7 +22,7 @@ describe('Redis client', () => {
     it('get value', () => {
         const client = new RedisClient(logger, null)
 
-        client.setValue('client', 'Danny')
+        return client.setValue('client', 'Danny')
             .then(() => client.getValue('client'))
             .then(result => result.should.be.equal('Danny'))
             .then(() => client.closeConnection())
@@ -31,7 +31,7 @@ describe('Redis client', () => {
     it('delete value', () => {
         const client = new RedisClient(logger, null)
 
-        client.setValue('town', 'NYC')
+        return client.setValue('town', 'NYC')
             .then(() => client.deleteValue('town'))
             .then(() => client.getValue('town'))
             .then(res => should.equal(res, null))
@@ -41,14 +41,14 @@ describe('Redis client', () => {
     it('filter values keys', () => {
         const client = new RedisClient(logger, null)
 
-        client.setValue('city:nyc', 'NYC')
-        client.setValue('city:la', 'LA')
-        client.setValue('city:moscow', 'Moscow')
-        client.setValue('town:rostov', 'Rostov')
-
-        client.filterValues('city:*', (keys) => {
-            return keys
-        })
+        return Promise.resolve()
+            .then(() => client.setValue('city:nyc', 'NYC'))
+            .then(() => client.setValue('city:la', 'LA'))
+            .then(() => client.setValue('city:moscow', 'Moscow'))
+            .then(() => client.setValue('town:rostov', 'Rostov'))
+            .then(() => client.filterValues('city:*', (keys) => {
+                return keys
+            }))
             .then((keys) => {
                 keys.should.be.an.Array()
                 keys.length.should.be.equal(3)
@@ -60,7 +60,9 @@ describe('Redis client', () => {
         const publishClient = new RedisClient(logger, null)
         const subscribeClient = new RedisClient(logger, null)
 
-        subscribeClient.subscribe('channel_one')
+        return Promise.resolve()
+            .then(() => subscribeClient.subscribe('channel_one'))
+
             .then(() => publishClient.publishMessage('channel_one', '1'))
             .then(() => publishClient.publishMessage('channel_two', '2'))
             .then(() => publishClient.publishMessage('channel_one', '3'))
@@ -78,7 +80,5 @@ describe('Redis client', () => {
 
             .then(() => publishClient.closeConnection())
             .then(() => subscribeClient.closeConnection())
-
-            .catch(err => console.error(err))
     })
 })
