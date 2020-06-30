@@ -47,5 +47,5 @@ steps:
         periodSeconds: 5
         image: busybox
         commands:
-          - "nslookup redis"
+          # - "nslookup redis"
           - "nc -z redis 6379"
