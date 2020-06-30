@@ -1,0 +1,48 @@
+version: "1.0"
+
+stages:
+  - "clone"
+  - "build"
+  - "test"
+
+steps:
+  clone:
+    type: "git-clone"
+    title: "Cloning repository"
+    description: "Cloning main repository..."
+    repo: "kubevious/${{CF_REPO_NAME}}"
+    revision: "${{CF_BRANCH}}"
+    stage: "clone"
+
+  prepare:
+    title: Prepare Dependencies
+    stage: build
+    image: 'kubevious/node-builder:12'
+    working_directory: "${{clone}}"
+    commands:
+      - ls -la ./redis
+      - npm install
+      - npm install --only=dev
+      - mkdir -p /codefresh/volume/runtime-data
+
+  run_unit_test:
+    title: Run Unit Tests
+    stage: test
+    image: 'kubevious/node-builder:12'
+    working_directory: "${{clone}}"
+    environment:
+      - "REDIS_HOST=redis"
+      - "REDIS_PORT=5179"
+    commands:
+      - pwd
+      - ls -la
+      - npm test
+    services:
+      composition:
+        redis:
+          image: redis:latest
+          ports:
+            - 5179
+      readiness:
+        image: redis:latest
+        timeoutSeconds: 90
