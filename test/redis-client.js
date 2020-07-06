@@ -8,7 +8,7 @@ describe('Redis client', () => {
     it('Constructor', () => {
         const client = new RedisClient(logger, null)
 
-        client.closeConnection()
+        client.close()
     })
 
     it('set value', () => {
@@ -16,7 +16,7 @@ describe('Redis client', () => {
 
         return client.setValue('client', 'Danny')
             .then(res => res.should.be.equal('OK'))
-            .then(() => client.closeConnection())
+            .then(() => client.close())
     })
 
     it('get value', () => {
@@ -25,7 +25,7 @@ describe('Redis client', () => {
         return client.setValue('client', 'Danny')
             .then(() => client.getValue('client'))
             .then(result => result.should.be.equal('Danny'))
-            .then(() => client.closeConnection())
+            .then(() => client.close())
     })
 
     it('delete value', () => {
@@ -35,7 +35,7 @@ describe('Redis client', () => {
             .then(() => client.deleteValue('town'))
             .then(() => client.getValue('town'))
             .then(res => should.equal(res, null))
-            .then(() => client.closeConnection())
+            .then(() => client.close())
     })
 
     it('filter values keys', () => {
@@ -53,32 +53,47 @@ describe('Redis client', () => {
                 keys.should.be.an.Array()
                 keys.length.should.be.equal(3)
             })
-            .then(() => client.closeConnection())
+            .then(() => client.close())
     })
 
     it('pub-sub-test-1', () => {
         const publishClient = new RedisClient(logger, null)
         const subscribeClient = new RedisClient(logger, null)
 
-        return Promise.resolve()
-            .then(() => subscribeClient.subscribe('channel_one'))
+        var subscription = null;
+        var messages = [];
 
+        return Promise.resolve()
+            .then(() => {
+                subscription = subscribeClient.subscribe('channel_one', (message) => {
+                    messages.push(message);
+                })
+            })
+
+            .then(() => Promise.timeout(100))
             .then(() => publishClient.publishMessage('channel_one', '1'))
             .then(() => publishClient.publishMessage('channel_two', '2'))
             .then(() => publishClient.publishMessage('channel_one', '3'))
-            .then(() => Promise.timeout(1000))
+            .then(() => Promise.timeout(100))
 
-            .then(() => subscribeClient.getMessageList())
-            .then(list => (list.length).should.be.equal(2))
-            .then(() => subscribeClient.unsubscribe('channel_one'))
+            .then(() => {
+                (messages.length).should.be.equal(2)
+                should(messages.sort()).be.eql(['1', '3'].sort())
+            })
+            
+            .then(() => subscription.close())
 
+            .then(() => Promise.timeout(100))
             .then(() => publishClient.publishMessage('channel_one', '4'))
             .then(() => publishClient.publishMessage('channel_one', '5'))
+            .then(() => Promise.timeout(100))
 
-            .then(() => subscribeClient.getMessageList())
-            .then((list) => (list.length).should.be.equal(2))
+            .then(() => {
+                (messages.length).should.be.equal(2)
+                should(messages.sort()).be.eql(['1', '3'].sort())
+            })
 
-            .then(() => publishClient.closeConnection())
-            .then(() => subscribeClient.closeConnection())
+            .then(() => publishClient.close())
+            .then(() => subscribeClient.close())
     })
 })

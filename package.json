@@ -27,6 +27,7 @@
     "redis": "^3.0.2",
     "the-lodash": "^1.0.15",
     "the-logger": "^1.1.22",
-    "the-promise": "^1.1.4"
+    "the-promise": "^1.1.4",
+    "uuid": "^8.2.0"
   }
 }
