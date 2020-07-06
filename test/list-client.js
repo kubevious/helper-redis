@@ -39,17 +39,17 @@ describe('list-client', () => {
             .then(res => {
                 (res).should.be.equal(1);
             })
-            .then(() => listClient.push('item2') )
+            .then(() => listClient.push(['item2', 'item3']) )
             .then(res => {
-                (res).should.be.equal(2);
+                (res).should.be.equal(3);
             })
             .then(() => listClient.count() )
             .then(res => {
-                (res).should.be.equal(2);
+                (res).should.be.equal(3);
             })
             .then(() => listClient.range(0, 100))
             .then(res => {
-                should(res).be.eql(['item2', 'item1']);
+                should(res).be.eql(['item3', 'item2', 'item1']);
             })
             .then(() => client.close());
     })
@@ -188,5 +188,34 @@ describe('list-client', () => {
             .then(() => client.close());
     })
 
+
+    it('non-existent-count', () => {
+        const client = new RedisClient(logger, null)
+
+        const listClient = client.list('my-list');
+
+        return Promise.resolve()
+            .then(() => listClient.delete() )
+            .then(() => listClient.count() )
+            .then(res => {
+                (res).should.be.equal(0);
+            })
+            .then(() => client.close());
+    })
+
+
+    it('non-existent-range', () => {
+        const client = new RedisClient(logger, null)
+
+        const listClient = client.list('my-list');
+
+        return Promise.resolve()
+            .then(() => listClient.delete() )
+            .then(() => listClient.range(0, 100) )
+            .then(res => {
+                should(res).be.eql([]);
+            })
+            .then(() => client.close());
+    })
 
 })
