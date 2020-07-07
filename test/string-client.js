@@ -38,6 +38,33 @@ describe('string-client', () => {
     })
 
 
+    it('exists-1', () => {
+        const client = new RedisClient(logger, null)
 
+        const stringClient = client.string('my-key');
+
+        return Promise.resolve()
+            .then(() => stringClient.delete() )
+            .then(() => stringClient.set('my-value'))
+            .then(() => stringClient.exists() )
+            .then(res => {
+                (res).should.be.true();
+            })
+            .then(() => client.close());
+    })
+
+    it('exists-2', () => {
+        const client = new RedisClient(logger, null)
+
+        const stringClient = client.string('my-key');
+
+        return Promise.resolve()
+            .then(() => stringClient.delete() )
+            .then(() => stringClient.exists() )
+            .then(res => {
+                (res).should.be.false();
+            })
+            .then(() => client.close());
+    })
 
 })
