@@ -185,6 +185,14 @@ describe('list-client', () => {
             .then(res => {
                 should(res).be.eql(['item5', 'item4', 'item3', 'item2', 'item1']);
             })
+            .then(() => listClient.range(0, -1))
+            .then(res => {
+                should(res.length).be.equal(200);
+            })
+            .then(() => listClient.range())
+            .then(res => {
+                should(res.length).be.equal(200);
+            })
             .then(() => client.close());
     })
 
