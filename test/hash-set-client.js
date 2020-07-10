@@ -8,6 +8,7 @@ describe('hash-set-client', () => {
 
     it('set', () => {
         const client = new RedisClient(logger, null)
+        client.run();
 
         const hashSetClient = client.hashSet('my-obj');
 
@@ -29,6 +30,7 @@ describe('hash-set-client', () => {
 
     it('get-field', () => {
         const client = new RedisClient(logger, null)
+        client.run();
 
         const hashSetClient = client.hashSet('my-obj');
 
@@ -47,6 +49,7 @@ describe('hash-set-client', () => {
 
     it('remove-field', () => {
         const client = new RedisClient(logger, null)
+        client.run();
 
         const hashSetClient = client.hashSet('my-obj');
 
@@ -68,6 +71,7 @@ describe('hash-set-client', () => {
 
     it('keys', () => {
         const client = new RedisClient(logger, null)
+        client.run();
 
         const hashSetClient = client.hashSet('my-obj');
 
@@ -85,7 +89,8 @@ describe('hash-set-client', () => {
     })
 
     it('key-count', () => {
-        const client = new RedisClient(logger, null)
+        const client = new RedisClient(logger, null);
+        client.run();
 
         const hashSetClient = client.hashSet('my-obj');
 

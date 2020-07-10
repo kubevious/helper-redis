@@ -7,7 +7,8 @@ const Promise = require('the-promise');
 describe('sorted-set-client', () => {
 
     it('add', () => {
-        const client = new RedisClient(logger, null)
+        const client = new RedisClient(logger, null);
+        client.run();
 
         const setClient = client.sortedSet('my-set');
 
@@ -29,7 +30,8 @@ describe('sorted-set-client', () => {
     })
 
     it('add-2', () => {
-        const client = new RedisClient(logger, null)
+        const client = new RedisClient(logger, null);
+        client.run();
 
         const setClient = client.sortedSet('my-set');
 
@@ -49,7 +51,8 @@ describe('sorted-set-client', () => {
     })
 
     it('pop-min', () => {
-        const client = new RedisClient(logger, null)
+        const client = new RedisClient(logger, null);
+        client.run();
 
         const setClient = client.sortedSet('my-set');
 
@@ -76,7 +79,8 @@ describe('sorted-set-client', () => {
     })
 
     it('pop-min-empty', () => {
-        const client = new RedisClient(logger, null)
+        const client = new RedisClient(logger, null);
+        client.run();
 
         const setClient = client.sortedSet('my-set');
 
@@ -90,7 +94,8 @@ describe('sorted-set-client', () => {
     })
 
     it('pop-max', () => {
-        const client = new RedisClient(logger, null)
+        const client = new RedisClient(logger, null);
+        client.run();
 
         const setClient = client.sortedSet('my-set');
 
@@ -117,7 +122,8 @@ describe('sorted-set-client', () => {
     })
 
     it('pop-max-empty', () => {
-        const client = new RedisClient(logger, null)
+        const client = new RedisClient(logger, null);
+        client.run();
 
         const setClient = client.sortedSet('my-set');
 
@@ -131,7 +137,8 @@ describe('sorted-set-client', () => {
     })
     
     it('remove', () => {
-        const client = new RedisClient(logger, null)
+        const client = new RedisClient(logger, null);
+        client.run();
 
         const setClient = client.sortedSet('my-set');
 
@@ -155,7 +162,8 @@ describe('sorted-set-client', () => {
     })
 
     it('remove-2', () => {
-        const client = new RedisClient(logger, null)
+        const client = new RedisClient(logger, null);
+        client.run();
 
         const setClient = client.sortedSet('my-set');
 
@@ -175,7 +183,8 @@ describe('sorted-set-client', () => {
     })
 
     it('count', () => {
-        const client = new RedisClient(logger, null)
+        const client = new RedisClient(logger, null);
+        client.run();
 
         const setClient = client.sortedSet('my-set');
 
@@ -194,7 +203,8 @@ describe('sorted-set-client', () => {
     })
 
     it('count-non-existent', () => {
-        const client = new RedisClient(logger, null)
+        const client = new RedisClient(logger, null);
+        client.run();
 
         const setClient = client.sortedSet('my-set');
 
@@ -208,7 +218,8 @@ describe('sorted-set-client', () => {
     })
 
     it('range-with-scores', () => {
-        const client = new RedisClient(logger, null)
+        const client = new RedisClient(logger, null);
+        client.run();
 
         const setClient = client.sortedSet('my-set');
 

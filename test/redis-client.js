@@ -7,13 +7,15 @@ const Promise = require('the-promise');
 describe('Redis client', () => {
 
     it('Constructor', () => {
-        const client = new RedisClient(logger, null)
+        const client = new RedisClient(logger, null);
+        client.run();
 
         client.close()
     })
 
     it('set value', () => {
-        const client = new RedisClient(logger, null)
+        const client = new RedisClient(logger, null);
+        client.run();
 
         return client.setValue('client', 'Danny')
             .then(res => res.should.be.equal('OK'))
@@ -21,7 +23,8 @@ describe('Redis client', () => {
     })
 
     it('get value', () => {
-        const client = new RedisClient(logger, null)
+        const client = new RedisClient(logger, null);
+        client.run();
 
         return client.setValue('client', 'Danny')
             .then(() => client.getValue('client'))
@@ -30,7 +33,8 @@ describe('Redis client', () => {
     })
 
     it('delete value', () => {
-        const client = new RedisClient(logger, null)
+        const client = new RedisClient(logger, null);
+        client.run();
 
         return client.setValue('town', 'NYC')
             .then(() => client.deleteValue('town'))
@@ -40,7 +44,8 @@ describe('Redis client', () => {
     })
 
     it('filter values keys', () => {
-        const client = new RedisClient(logger, null)
+        const client = new RedisClient(logger, null);
+        client.run();
 
         return Promise.resolve()
             .then(() => client.setValue('city:nyc', 'NYC'))

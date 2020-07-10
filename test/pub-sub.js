@@ -7,8 +7,10 @@ const Promise = require('the-promise');
 describe('pub-sub', () => {
     
     it('test-1', () => {
-        const publishClient = new RedisClient(logger, null)
-        const subscribeClient = new RedisClient(logger, null)
+        const publishClient = new RedisClient(logger, null);
+        publishClient.run();
+        const subscribeClient = new RedisClient(logger, null);
+        subscribeClient.run();
 
         var subscription = null;
         var messages = [];

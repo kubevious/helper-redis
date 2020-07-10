@@ -7,7 +7,8 @@ const Promise = require('the-promise');
 describe('list-client', () => {
 
     it('push', () => {
-        const client = new RedisClient(logger, null)
+        const client = new RedisClient(logger, null);
+        client.run();
 
         const listClient = client.list('my-list');
 
@@ -29,7 +30,8 @@ describe('list-client', () => {
     })
 
     it('push-2', () => {
-        const client = new RedisClient(logger, null)
+        const client = new RedisClient(logger, null);
+        client.run();
 
         const listClient = client.list('my-list');
 
@@ -55,7 +57,8 @@ describe('list-client', () => {
     })
 
     it('push-right', () => {
-        const client = new RedisClient(logger, null)
+        const client = new RedisClient(logger, null);
+        client.run();
 
         const listClient = client.list('my-list');
 
@@ -81,7 +84,8 @@ describe('list-client', () => {
     })
 
     it('set', () => {
-        const client = new RedisClient(logger, null)
+        const client = new RedisClient(logger, null);
+        client.run();
 
         const listClient = client.list('my-list');
 
@@ -106,7 +110,8 @@ describe('list-client', () => {
     })
 
     it('pop', () => {
-        const client = new RedisClient(logger, null)
+        const client = new RedisClient(logger, null);
+        client.run();
 
         const listClient = client.list('my-list');
 
@@ -134,7 +139,8 @@ describe('list-client', () => {
     })
 
     it('pop-right', () => {
-        const client = new RedisClient(logger, null)
+        const client = new RedisClient(logger, null);
+        client.run();
 
         const listClient = client.list('my-list');
 
@@ -162,7 +168,8 @@ describe('list-client', () => {
     })
 
     it('range', () => {
-        const client = new RedisClient(logger, null)
+        const client = new RedisClient(logger, null);
+        client.run();
 
         const listClient = client.list('my-list');
 
@@ -198,7 +205,8 @@ describe('list-client', () => {
 
 
     it('non-existent-count', () => {
-        const client = new RedisClient(logger, null)
+        const client = new RedisClient(logger, null);
+        client.run();
 
         const listClient = client.list('my-list');
 
@@ -213,7 +221,8 @@ describe('list-client', () => {
 
 
     it('non-existent-range', () => {
-        const client = new RedisClient(logger, null)
+        const client = new RedisClient(logger, null);
+        client.run();
 
         const listClient = client.list('my-list');
 

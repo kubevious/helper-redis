@@ -7,7 +7,8 @@ const Promise = require('the-promise');
 describe('string-client', () => {
 
     it('set', () => {
-        const client = new RedisClient(logger, null)
+        const client = new RedisClient(logger, null);
+        client.run();
 
         const stringClient = client.string('my-key');
 
@@ -22,7 +23,8 @@ describe('string-client', () => {
     })
 
     it('delete', () => {
-        const client = new RedisClient(logger, null)
+        const client = new RedisClient(logger, null);
+        client.run();
 
         const stringClient = client.string('my-key');
 
@@ -39,7 +41,8 @@ describe('string-client', () => {
 
 
     it('exists-1', () => {
-        const client = new RedisClient(logger, null)
+        const client = new RedisClient(logger, null);
+        client.run();
 
         const stringClient = client.string('my-key');
 
@@ -54,7 +57,8 @@ describe('string-client', () => {
     })
 
     it('exists-2', () => {
-        const client = new RedisClient(logger, null)
+        const client = new RedisClient(logger, null);
+        client.run();
 
         const stringClient = client.string('my-key');
 

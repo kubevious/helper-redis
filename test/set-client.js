@@ -7,7 +7,8 @@ const Promise = require('the-promise');
 describe('set-client', () => {
 
     it('add', () => {
-        const client = new RedisClient(logger, null)
+        const client = new RedisClient(logger, null);
+        client.run();
 
         const setClient = client.set('my-set');
 
@@ -29,7 +30,8 @@ describe('set-client', () => {
     })
 
     it('add-2', () => {
-        const client = new RedisClient(logger, null)
+        const client = new RedisClient(logger, null);
+        client.run();
 
         const setClient = client.set('my-set');
 
@@ -50,7 +52,8 @@ describe('set-client', () => {
     })
 
     it('pop', () => {
-        const client = new RedisClient(logger, null)
+        const client = new RedisClient(logger, null);
+        client.run();
 
         const setClient = client.set('my-set');
 
@@ -71,7 +74,8 @@ describe('set-client', () => {
     })
 
     it('remove', () => {
-        const client = new RedisClient(logger, null)
+        const client = new RedisClient(logger, null);
+        client.run();
 
         const setClient = client.set('my-set');
 
@@ -92,7 +96,8 @@ describe('set-client', () => {
     })
 
     it('non-existent-count', () => {
-        const client = new RedisClient(logger, null)
+        const client = new RedisClient(logger, null);
+        client.run();
 
         const setClient = client.set('my-set');
 
@@ -106,7 +111,8 @@ describe('set-client', () => {
     })
 
     it('non-existent-members', () => {
-        const client = new RedisClient(logger, null)
+        const client = new RedisClient(logger, null);
+        client.run();
 
         const setClient = client.set('my-set');
 
