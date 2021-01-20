@@ -1,13 +1,19 @@
-const should = require('should');
-const _ = require('the-lodash');
-const logger = require('the-logger').setup('test', { pretty: true });
-const RedisClient = require('../lib/redis-client')
-const Promise = require('the-promise');
+import 'mocha';
+import should = require('should');
+import _ from 'the-lodash';
+import { Promise } from 'the-promise';
+import { setupLogger, LoggerOptions } from 'the-logger';
+
+const loggerOptions = new LoggerOptions().enableFile(false).pretty(true);
+const logger = setupLogger('test', loggerOptions);
+
+import { RedisClient }  from '../src';
+
 
 describe('list-client', () => {
 
     it('push', () => {
-        const client = new RedisClient(logger, null);
+        const client = new RedisClient(logger);
         client.run();
 
         const listClient = client.list('my-list');
@@ -16,11 +22,11 @@ describe('list-client', () => {
             .then(() => listClient.delete() )
             .then(() => listClient.push('item1') )
             .then(res => {
-                (res).should.be.equal(1);
+                should(res).be.equal(1);
             })
             .then(() => listClient.count() )
             .then(res => {
-                (res).should.be.equal(1);
+                should(res).be.equal(1);
             })
             .then(() => listClient.range(0, 100))
             .then(res => {
@@ -30,7 +36,7 @@ describe('list-client', () => {
     })
 
     it('push-2', () => {
-        const client = new RedisClient(logger, null);
+        const client = new RedisClient(logger);
         client.run();
 
         const listClient = client.list('my-list');
@@ -39,15 +45,15 @@ describe('list-client', () => {
             .then(() => listClient.delete() )
             .then(() => listClient.push('item1') )
             .then(res => {
-                (res).should.be.equal(1);
+                should(res).be.equal(1);
             })
             .then(() => listClient.push(['item2', 'item3']) )
             .then(res => {
-                (res).should.be.equal(3);
+                should(res).be.equal(3);
             })
             .then(() => listClient.count() )
             .then(res => {
-                (res).should.be.equal(3);
+                should(res).be.equal(3);
             })
             .then(() => listClient.range(0, 100))
             .then(res => {
@@ -57,7 +63,7 @@ describe('list-client', () => {
     })
 
     it('push-right', () => {
-        const client = new RedisClient(logger, null);
+        const client = new RedisClient(logger);
         client.run();
 
         const listClient = client.list('my-list');
@@ -66,15 +72,15 @@ describe('list-client', () => {
             .then(() => listClient.delete() )
             .then(() => listClient.push('item1') )
             .then(res => {
-                (res).should.be.equal(1);
+                should(res).be.equal(1);
             })
             .then(() => listClient.pushRight('item2') )
             .then(res => {
-                (res).should.be.equal(2);
+                should(res).be.equal(2);
             })
             .then(() => listClient.count() )
             .then(res => {
-                (res).should.be.equal(2);
+                should(res).be.equal(2);
             })
             .then(() => listClient.range(0, 100))
             .then(res => {
@@ -84,7 +90,7 @@ describe('list-client', () => {
     })
 
     it('set', () => {
-        const client = new RedisClient(logger, null);
+        const client = new RedisClient(logger);
         client.run();
 
         const listClient = client.list('my-list');
@@ -95,12 +101,12 @@ describe('list-client', () => {
             .then(() => listClient.push('item2') )
             .then(() => listClient.push('item3') )
             .then(res => {
-                (res).should.be.equal(3);
+                should(res).be.equal(3);
             })
             .then(() => listClient.set(1, 'item4') )
             .then(() => listClient.count() )
             .then(res => {
-                (res).should.be.equal(3);
+                should(res).be.equal(3);
             })
             .then(() => listClient.range(0, 100))
             .then(res => {
@@ -110,7 +116,7 @@ describe('list-client', () => {
     })
 
     it('pop', () => {
-        const client = new RedisClient(logger, null);
+        const client = new RedisClient(logger);
         client.run();
 
         const listClient = client.list('my-list');
@@ -121,15 +127,15 @@ describe('list-client', () => {
             .then(() => listClient.push('item2') )
             .then(() => listClient.push('item3') )
             .then(res => {
-                (res).should.be.equal(3);
+                should(res).be.equal(3);
             })
             .then(() => listClient.pop() )
             .then(res => {
-                (res).should.be.equal('item3');
+                should(res).be.equal('item3');
             })
             .then(() => listClient.count() )
             .then(res => {
-                (res).should.be.equal(2);
+                should(res).be.equal(2);
             })
             .then(() => listClient.range(0, 100))
             .then(res => {
@@ -139,7 +145,7 @@ describe('list-client', () => {
     })
 
     it('pop-right', () => {
-        const client = new RedisClient(logger, null);
+        const client = new RedisClient(logger);
         client.run();
 
         const listClient = client.list('my-list');
@@ -150,15 +156,15 @@ describe('list-client', () => {
             .then(() => listClient.push('item2') )
             .then(() => listClient.push('item3') )
             .then(res => {
-                (res).should.be.equal(3);
+                should(res).be.equal(3);
             })
             .then(() => listClient.popRight() )
             .then(res => {
-                (res).should.be.equal('item1');
+                should(res).be.equal('item1');
             })
             .then(() => listClient.count() )
             .then(res => {
-                (res).should.be.equal(2);
+                should(res).be.equal(2);
             })
             .then(() => listClient.range(0, 100))
             .then(res => {
@@ -168,7 +174,7 @@ describe('list-client', () => {
     })
 
     it('range', () => {
-        const client = new RedisClient(logger, null);
+        const client = new RedisClient(logger);
         client.run();
 
         const listClient = client.list('my-list');
@@ -182,7 +188,7 @@ describe('list-client', () => {
             })
             .then(() => listClient.count() )
             .then(res => {
-                (res).should.be.equal(200);
+                should(res).be.equal(200);
             })
             .then(() => listClient.range(0, 4))
             .then(res => {
@@ -205,7 +211,7 @@ describe('list-client', () => {
 
 
     it('non-existent-count', () => {
-        const client = new RedisClient(logger, null);
+        const client = new RedisClient(logger);
         client.run();
 
         const listClient = client.list('my-list');
@@ -214,14 +220,14 @@ describe('list-client', () => {
             .then(() => listClient.delete() )
             .then(() => listClient.count() )
             .then(res => {
-                (res).should.be.equal(0);
+                should(res).be.equal(0);
             })
             .then(() => client.close());
     })
 
 
     it('non-existent-range', () => {
-        const client = new RedisClient(logger, null);
+        const client = new RedisClient(logger);
         client.run();
 
         const listClient = client.list('my-list');

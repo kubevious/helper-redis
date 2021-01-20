@@ -1,32 +1,33 @@
-const _ = require('the-lodash');
-const RedisBaseClient = require('./base-client');
+import _ from 'the-lodash'
+import { RedisClient } from './redis-client';
+import { RedisBaseClient } from './base-client';
 
-class RedisSortedSetClient extends RedisBaseClient
+export class RedisSortedSetClient extends RedisBaseClient
 {
-    constructor(client, name)
+    constructor(client : RedisClient, name: string)
     {
         super(client, name);
     }
 
-    add(valueOrArray)
+    add(valueOrArray: any)
     {
         if (!_.isArray(valueOrArray)) {
             valueOrArray = [valueOrArray];
         }
-        var params = [this._name];
+        var params = [this.name];
         for(var x of valueOrArray) {
             params.push(x.score);
             params.push(x.value);
         }
-        return this._client.exec_command('zadd', params);
+        return this.client.exec_command('zadd', params);
     }
 
-    remove(valueOrArray)
+    remove(valueOrArray: any)
     {
         if (!_.isArray(valueOrArray)) {
             valueOrArray = [valueOrArray];
         }
-        return this._client.exec_command('zrem', [this._name, ...valueOrArray]);
+        return this.client.exec_command('zrem', [this.name, ...valueOrArray]);
     }
 
     popMin()
@@ -39,10 +40,10 @@ class RedisSortedSetClient extends RedisBaseClient
         return this._pop('zpopmax');
     }
 
-    _pop(cmd)
+    private _pop(cmd: string)
     {
-        return this._client.exec_command(cmd, [this._name])
-            .then(result => {
+        return this.client.exec_command(cmd, [this.name])
+            .then((result: any) => {
                 if (!result.length) {
                     return null;
                 }
@@ -53,7 +54,7 @@ class RedisSortedSetClient extends RedisBaseClient
             });
     }
 
-    range(start, end)
+    range(start?: number, end?: number)
     {
         if (_.isUndefined(start)) {
             start = 0;
@@ -61,10 +62,10 @@ class RedisSortedSetClient extends RedisBaseClient
         if (_.isUndefined(end)) {
             end = -1;
         }
-        return this._client.exec_command('zrange', [this._name, start, end]);
+        return this.client.exec_command('zrange', [this.name, start, end]);
     }
 
-    rangeWithScores(start, end)
+    rangeWithScores(start?: number, end?: number)
     {
         if (_.isUndefined(start)) {
             start = 0;
@@ -72,8 +73,8 @@ class RedisSortedSetClient extends RedisBaseClient
         if (_.isUndefined(end)) {
             end = -1;
         }
-        return this._client.exec_command('zrange', [this._name, start, end, 'withscores'])
-            .then(res => {
+        return this.client.exec_command('zrange', [this.name, start, end, 'withscores'])
+            .then((res: any) => {
                 var finalResult = [];
                 for(var i = 0; i < res.length; i += 2)
                 {
@@ -86,14 +87,12 @@ class RedisSortedSetClient extends RedisBaseClient
             });
     }
 
-    count(min, max)
+    count(min?: number, max?: number)
     {
         if (_.isUndefined(min) && _.isUndefined(max)) {
-            return this._client.exec_command('zcard', [this._name]);
+            return this.client.exec_command('zcard', [this.name]);
         } else {
-            return this._client.exec_command('zcount', [this._name, min, max]);
+            return this.client.exec_command('zcount', [this.name, min, max]);
         }
     }
 }
-
-module.exports = RedisSortedSetClient;

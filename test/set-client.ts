@@ -1,13 +1,18 @@
-const should = require('should');
-const _ = require('the-lodash');
-const logger = require('the-logger').setup('test', { pretty: true });
-const RedisClient = require('../lib/redis-client')
-const Promise = require('the-promise');
+import 'mocha';
+import should = require('should');
+import _ from 'the-lodash';
+import { Promise } from 'the-promise';
+import { setupLogger, LoggerOptions } from 'the-logger';
+
+const loggerOptions = new LoggerOptions().enableFile(false).pretty(true);
+const logger = setupLogger('test', loggerOptions);
+
+import { RedisClient }  from '../src';
 
 describe('set-client', () => {
 
     it('add', () => {
-        const client = new RedisClient(logger, null);
+        const client = new RedisClient(logger);
         client.run();
 
         const setClient = client.set('my-set');
@@ -16,11 +21,11 @@ describe('set-client', () => {
             .then(() => setClient.delete() )
             .then(() => setClient.add('item1') )
             .then(res => {
-                (res).should.be.equal(1);
+                should(res).be.equal(1);
             })
             .then(() => setClient.count() )
             .then(res => {
-                (res).should.be.equal(1);
+                should(res).be.equal(1);
             })
             .then(() => setClient.members())
             .then(res => {
@@ -30,7 +35,7 @@ describe('set-client', () => {
     })
 
     it('add-2', () => {
-        const client = new RedisClient(logger, null);
+        const client = new RedisClient(logger);
         client.run();
 
         const setClient = client.set('my-set');
@@ -42,7 +47,7 @@ describe('set-client', () => {
             .then(() => setClient.add(['item2', 'item4']))
             .then(() => setClient.count() )
             .then(res => {
-                (res).should.be.equal(4);
+                should(res).be.equal(4);
             })
             .then(() => setClient.members())
             .then(res => {
@@ -52,7 +57,7 @@ describe('set-client', () => {
     })
 
     it('pop', () => {
-        const client = new RedisClient(logger, null);
+        const client = new RedisClient(logger);
         client.run();
 
         const setClient = client.set('my-set');
@@ -64,17 +69,17 @@ describe('set-client', () => {
             .then(() => setClient.add('item3') )
             .then(() => setClient.pop() )
             .then(res => {
-                (res).should.startWith('item');
+                should(res).startWith('item');
             })
             .then(() => setClient.count() )
             .then(res => {
-                (res).should.be.equal(2);
+                should(res).be.equal(2);
             })
             .then(() => client.close());
     })
 
     it('remove', () => {
-        const client = new RedisClient(logger, null);
+        const client = new RedisClient(logger);
         client.run();
 
         const setClient = client.set('my-set');
@@ -84,7 +89,7 @@ describe('set-client', () => {
             .then(() => setClient.add(['item1', 'item2', 'item3', 'item4']) )
             .then(() => setClient.count() )
             .then(res => {
-                (res).should.be.equal(4);
+                should(res).be.equal(4);
             })
             .then(() => setClient.remove('item3') )
             .then(() => setClient.remove(['item4', 'item1']) )
@@ -96,7 +101,7 @@ describe('set-client', () => {
     })
 
     it('non-existent-count', () => {
-        const client = new RedisClient(logger, null);
+        const client = new RedisClient(logger);
         client.run();
 
         const setClient = client.set('my-set');
@@ -105,13 +110,13 @@ describe('set-client', () => {
             .then(() => setClient.delete() )
             .then(() => setClient.count() )
             .then(res => {
-                (res).should.be.equal(0);
+                should(res).be.equal(0);
             })
             .then(() => client.close());
     })
 
     it('non-existent-members', () => {
-        const client = new RedisClient(logger, null);
+        const client = new RedisClient(logger);
         client.run();
 
         const setClient = client.set('my-set');

@@ -6,4 +6,6 @@ cd $MY_DIR
 export REDIS_HOST=127.0.0.1
 export REDIS_PORT=5179
 
-mocha
+export TS_NODE_COMPILER_OPTIONS="{\"module\": \"commonjs\" }"
+
+mocha -r ./node_modules/ts-node/register 'test/**/*.ts'

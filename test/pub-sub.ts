@@ -1,19 +1,24 @@
-const should = require('should');
-const _ = require('the-lodash');
-const logger = require('the-logger').setup('test', { pretty: true });
-const RedisClient = require('../lib/redis-client')
-const Promise = require('the-promise');
+import 'mocha';
+import should = require('should');
+import _ from 'the-lodash';
+import { Promise } from 'the-promise';
+import { setupLogger, LoggerOptions } from 'the-logger';
+
+const loggerOptions = new LoggerOptions().enableFile(false).pretty(true);
+const logger = setupLogger('test', loggerOptions);
+
+import { RedisClient, RedisSubscription }  from '../src';
 
 describe('pub-sub', () => {
     
     it('test-1', () => {
-        const publishClient = new RedisClient(logger, null);
+        const publishClient = new RedisClient(logger);
         publishClient.run();
-        const subscribeClient = new RedisClient(logger, null);
+        const subscribeClient = new RedisClient(logger);
         subscribeClient.run();
 
-        var subscription = null;
-        var messages = [];
+        var subscription : RedisSubscription;
+        var messages : string[] = [];
 
         return Promise.resolve()
             .then(() => {

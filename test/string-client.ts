@@ -1,13 +1,18 @@
-const should = require('should');
-const _ = require('the-lodash');
-const logger = require('the-logger').setup('test', { pretty: true });
-const RedisClient = require('../lib/redis-client')
-const Promise = require('the-promise');
+import 'mocha';
+import should = require('should');
+import _ from 'the-lodash';
+import { Promise } from 'the-promise';
+import { setupLogger, LoggerOptions } from 'the-logger';
+
+const loggerOptions = new LoggerOptions().enableFile(false).pretty(true);
+const logger = setupLogger('test', loggerOptions);
+
+import { RedisClient }  from '../src';
 
 describe('string-client', () => {
 
     it('set', () => {
-        const client = new RedisClient(logger, null);
+        const client = new RedisClient(logger);
         client.run();
 
         const stringClient = client.string('my-key');
@@ -17,13 +22,13 @@ describe('string-client', () => {
             .then(() => stringClient.set('my-value'))
             .then(() => stringClient.get() )
             .then(res => {
-                (res).should.be.equal('my-value');
+                should(res).be.equal('my-value');
             })
             .then(() => client.close());
     })
 
     it('delete', () => {
-        const client = new RedisClient(logger, null);
+        const client = new RedisClient(logger);
         client.run();
 
         const stringClient = client.string('my-key');
@@ -41,7 +46,7 @@ describe('string-client', () => {
 
 
     it('exists-1', () => {
-        const client = new RedisClient(logger, null);
+        const client = new RedisClient(logger);
         client.run();
 
         const stringClient = client.string('my-key');
@@ -57,7 +62,7 @@ describe('string-client', () => {
     })
 
     it('exists-2', () => {
-        const client = new RedisClient(logger, null);
+        const client = new RedisClient(logger);
         client.run();
 
         const stringClient = client.string('my-key');
