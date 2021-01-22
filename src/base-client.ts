@@ -32,26 +32,26 @@ export class RedisBaseClient
         return this._client.exec_command('del', [this._name]);
     }
 
-    ttl()
+    ttl() : Promise<TTLResult>
     {
         return this._client.exec_command('ttl', [this._name])
             .then((res: number) => {
                 if (res >= 0) {
-                    return <TTLResult> {
+                    return {
                         exists: true,
                         hasExpiration: true,
                         ttlSeconds: res
                     };
                 }
                 if (res == -1) {
-                    return <TTLResult> {
+                    return {
                         exists: true,
                         hasExpiration: false,
                         ttlSeconds: 0
                     };
                 }
                 if (res == -2) {
-                    return <TTLResult> {
+                    return {
                         exists: false,
                         hasExpiration: false,
                         ttlSeconds: 0
@@ -61,9 +61,12 @@ export class RedisBaseClient
             });
     }
 
-    expire(seconds: number)
+    expire(seconds: number) : Promise<boolean>
     {
-        return this._client.exec_command('expire', [this._name, seconds]);
+        return this._client.exec_command('expire', [this._name, seconds])
+        .then((res: number) => {
+            return (res == 1);
+        });
     }
 
 }

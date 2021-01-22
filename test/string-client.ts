@@ -101,6 +101,9 @@ describe('string-client', () => {
 
         return stringClient.set('test-1234')
             .then(() => stringClient.expire(10) )
+            .then(res => {
+                should(res).be.equal(true);
+            })
             .then(() => stringClient.ttl() )
             .then(res => {
                 should(res.exists).be.equal(true);
@@ -149,4 +152,18 @@ describe('string-client', () => {
             })
             .then(() => client.close())
     })
+
+    it('expire-non-existing', () => {
+        const client = new RedisClient(logger);
+        client.run();
+
+        const stringClient = client.string('my-str-key-not-existing');
+
+        return stringClient.expire(10)
+            .then(res => {
+                should(res).be.equal(false);
+            })
+            .then(() => client.close())
+    })
+
 })
