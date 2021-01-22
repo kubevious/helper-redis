@@ -23,7 +23,7 @@ describe('Redis client', () => {
         client.run();
 
         return client.setValue('client', 'Danny')
-            .then(res => res.should.be.equal('OK'))
+            .then(res => should(res).be.equal('OK'))
             .then(() => client.close())
     })
 
@@ -33,7 +33,7 @@ describe('Redis client', () => {
 
         return client.setValue('client', 'Danny')
             .then(() => client.getValue('client'))
-            .then(result => result.should.be.equal('Danny'))
+            .then(result => should(result).be.equal('Danny'))
             .then(() => client.close())
     })
 
@@ -61,8 +61,8 @@ describe('Redis client', () => {
                 return keys
             }))
             .then((keys) => {
-                keys.should.be.an.Array()
-                keys.length.should.be.equal(3)
+                should(keys).be.an.Array()
+                should((<any[]>keys).length).be.equal(3)
             })
             .then(() => client.close())
     })

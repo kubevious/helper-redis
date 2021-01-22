@@ -31,4 +31,46 @@ export class RedisBaseClient
     {
         return this._client.exec_command('del', [this._name]);
     }
+
+    ttl()
+    {
+        return this._client.exec_command('ttl', [this._name])
+            .then((res: number) => {
+                if (res >= 0) {
+                    return <TTLResult> {
+                        exists: true,
+                        hasExpiration: true,
+                        ttlSeconds: res
+                    };
+                }
+                if (res == -1) {
+                    return <TTLResult> {
+                        exists: true,
+                        hasExpiration: false,
+                        ttlSeconds: 0
+                    };
+                }
+                if (res == -2) {
+                    return <TTLResult> {
+                        exists: false,
+                        hasExpiration: false,
+                        ttlSeconds: 0
+                    };
+                }
+                throw new Error("Unexpected Result.");
+            });
+    }
+
+    expire(seconds: number)
+    {
+        return this._client.exec_command('expire', [this._name, seconds]);
+    }
+
+}
+
+export interface TTLResult 
+{
+    exists: boolean,
+    hasExpiration: boolean,
+    ttlSeconds: number,
 }

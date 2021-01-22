@@ -10,13 +10,26 @@ export class RedisStringClient extends RedisBaseClient
         super(client, name);
     }
 
-    set(value: string)
+    set(value: string, params? : SetParams)
     {
-        return this.client.exec_command('set', [this.name, value]);
+        const args : any[] = [this.name, value];
+        if (params)
+        {
+            if (params.expireSeconds) {
+                args.push('ex');
+                args.push(params.expireSeconds);
+            }
+        }
+        return this.client.exec_command('set', args);
     }
 
     get()
     {
         return this.client.exec_command('get', [this.name]);
     }
+}
+
+export interface SetParams
+{
+    expireSeconds?: number
 }

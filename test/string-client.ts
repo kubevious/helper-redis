@@ -76,4 +76,77 @@ describe('string-client', () => {
             .then(() => client.close());
     })
 
+
+    it('ttl-no-expiration', () => {
+        const client = new RedisClient(logger);
+        client.run();
+
+        const stringClient = client.string('my-str-key-2');
+
+        return stringClient.set('test-1234')
+            .then(() => stringClient.ttl() )
+            .then(res => {
+                should(res.exists).be.equal(true);
+                should(res.hasExpiration).be.equal(false);
+                should(res.ttlSeconds).be.equal(0);
+            })
+            .then(() => client.close())
+    })
+
+    it('ttl-expiration-with-expire', () => {
+        const client = new RedisClient(logger);
+        client.run();
+
+        const stringClient = client.string('my-str-key-3');
+
+        return stringClient.set('test-1234')
+            .then(() => stringClient.expire(10) )
+            .then(() => stringClient.ttl() )
+            .then(res => {
+                should(res.exists).be.equal(true);
+                should(res.hasExpiration).be.equal(true);
+                should(res.ttlSeconds).be.Number().and.greaterThanOrEqual(8).and.lessThanOrEqual(10);
+            })
+            .then(() => Promise.timeout(3 * 1000))
+            .then(() => stringClient.ttl() )
+            .then(res => {
+                should(res.exists).be.equal(true);
+                should(res.hasExpiration).be.equal(true);
+                should(res.ttlSeconds).be.Number().and.greaterThanOrEqual(5).and.lessThanOrEqual(7);
+            })
+            .then(() => {
+                logger.info("Waiting key to expire...");
+                return Promise.timeout(9 * 1000)
+            })
+            .then(() => stringClient.ttl() )
+            .then(res => {
+                should(res.exists).be.equal(false);
+                should(res.hasExpiration).be.equal(false);
+                should(res.ttlSeconds).be.equal(0);
+            })
+            .then(() => client.close())
+    }).timeout(15 * 1000)
+
+    it('ttl-create-with-expiration', () => {
+        const client = new RedisClient(logger);
+        client.run();
+
+        const stringClient = client.string('my-str-key-4');
+
+        return stringClient.set('test-1234', { expireSeconds: 60 })
+            .then(() => stringClient.ttl() )
+            .then(res => {
+                should(res.exists).be.equal(true);
+                should(res.hasExpiration).be.equal(true);
+                should(res.ttlSeconds).be.Number().and.greaterThanOrEqual(50).and.lessThanOrEqual(60);
+            })
+            .then(() => stringClient.set('test-6789'))
+            .then(() => stringClient.ttl() )
+            .then(res => {
+                should(res.exists).be.equal(true);
+                should(res.hasExpiration).be.equal(false);
+                should(res.ttlSeconds).be.equal(0);
+            })
+            .then(() => client.close())
+    })
 })

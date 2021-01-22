@@ -241,4 +241,50 @@ describe('list-client', () => {
             .then(() => client.close());
     })
 
+
+    it('ttl-no-expiration', () => {
+        const client = new RedisClient(logger);
+        client.run();
+
+        const listClient = client.list('my-list');
+        
+        return Promise.resolve()
+            .then(() => listClient.delete() )
+            .then(() => listClient.push('item-1') )
+            .then(() => listClient.ttl() )
+            .then(res => {
+                should(res.exists).be.equal(true);
+                should(res.hasExpiration).be.equal(false);
+                should(res.ttlSeconds).be.equal(0);
+            })
+            .then(() => client.close())
+    })
+
+
+    it('ttl-expiration', () => {
+        const client = new RedisClient(logger);
+        client.run();
+
+        const listClient = client.list('my-list-exp');
+        
+        return Promise.resolve()
+            .then(() => listClient.delete() )
+            .then(() => listClient.push('item-1') )
+            .then(() => listClient.expire(22) )
+            .then(() => listClient.ttl() )
+            .then(res => {
+                should(res.exists).be.equal(true);
+                should(res.hasExpiration).be.equal(true);
+                should(res.ttlSeconds).be.Number().and.greaterThanOrEqual(20).and.lessThanOrEqual(22);
+            })
+            .then(() => listClient.push('item-2') )
+            .then(() => listClient.ttl() )
+            .then(res => {
+                should(res.exists).be.equal(true);
+                should(res.hasExpiration).be.equal(true);
+                should(res.ttlSeconds).be.Number().and.greaterThanOrEqual(20).and.lessThanOrEqual(22);
+            })
+            .then(() => client.close())
+    })
+
 })
