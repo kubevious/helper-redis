@@ -11,36 +11,36 @@ export class RedisHashSetClient extends RedisBaseClient
 
     set(obj: any)
     {
-        var params = [this.name];
-        for(var x of _.keys(obj)) {
+        let params : string[] = [];
+        for(let x of _.keys(obj)) {
             params.push(x);
             params.push(obj[x]);
         }
-        return this.client.exec_command('hset', params);
+        return this.exec(x => x.hset(this.name, params));
     }
 
     get()
     {
-        return this.client.exec_command('hgetall', [this.name]);
+        return this.exec(x => x.hgetall(this.name));
     }
 
     getField(field: string)
     {
-        return this.client.exec_command('hget', [this.name, field]);
+        return this.exec(x => x.hget(this.name, field));
     }
 
     removeField(field: string)
     {
-        return this.client.exec_command('hdel', [this.name, field]);
+        return this.exec(x => x.hdel(this.name, field));
     }
 
     keys()
     {
-        return this.client.exec_command('hkeys', [this.name]);
+        return this.exec(x => x.hkeys(this.name));
     }
 
     keyCount()
     {
-        return this.client.exec_command('hlen', [this.name]);
+        return this.exec(x => x.hlen(this.name));
     }
 }

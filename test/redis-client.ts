@@ -37,7 +37,7 @@ describe('Redis client', () => {
             .then(() => client.close())
     })
 
-    it('delete value', () => {
+    it('delete-value', () => {
         const client = new RedisClient(logger);
         client.run();
 
@@ -48,7 +48,7 @@ describe('Redis client', () => {
             .then(() => client.close())
     })
 
-    it('filter values keys', () => {
+    it('filter-values-keys-small', () => {
         const client = new RedisClient(logger);
         client.run();
 
@@ -57,12 +57,33 @@ describe('Redis client', () => {
             .then(() => client.setValue('city:la', 'LA'))
             .then(() => client.setValue('city:moscow', 'Moscow'))
             .then(() => client.setValue('town:rostov', 'Rostov'))
-            .then(() => client.filterValues('city:*', (keys) => {
-                return keys
-            }))
+            .then(() => client.filterValues('city:*'))
             .then((keys) => {
                 should(keys).be.an.Array()
                 should((<any[]>keys).length).be.equal(3)
+            })
+            .then(() => client.close())
+    })
+
+    it('filter-values-keys-big', () => {
+        const client = new RedisClient(logger);
+        client.run();
+
+        const expectedValues : Record<string, string> = {};
+        for(let i = 1; i <= 500; i++) {
+            expectedValues['filter:mykey' + i] = 'myvalue' + i;
+        }
+
+        return Promise.resolve()
+            .then(() => {
+                return Promise.serial(_.keys(expectedValues), x => {
+                    return client.setValue(x, expectedValues[x]);
+                })
+            })
+            .then(() => client.filterValues('filter:*'))
+            .then((keys) => {
+                should(keys).be.an.Array()
+                should((keys).length).be.equal(500)
             })
             .then(() => client.close())
     })

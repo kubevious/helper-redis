@@ -2,7 +2,9 @@ import _ from 'the-lodash'
 import { Promise, Resolvable } from 'the-promise';
 import { ILogger } from 'the-logger';
 
-import * as redis from 'redis';
+
+// import * as redis from 'redis';
+import * as IORedis from 'ioredis'
 
 import  { v4 as uuidv4 }  from 'uuid';
 
@@ -12,6 +14,7 @@ import { RedisSetClient } from './set-client';
 import { RedisSortedSetClient } from './sorted-set-client';
 import { RedisHashSetClient } from './hash-set-client';
 
+(<any>IORedis).Promise = Promise;
 export interface RedisClientParams {
     port?: number,
     host?: string
@@ -25,10 +28,11 @@ export class RedisClient {
     private _redisHost? : string;
 
     private _isClosed : boolean = false;
-    private _channels : Record<string, { handlers: Record<string, PubSubHandler> }> = {};
+    // private _channels : Record<string, { handlers: Record<string, PubSubHandler> }> = {};
 
-    private _client : redis.RedisClient | null = null;
-    private _pubsubClient : redis.RedisClient | null = null;
+    private _commands : IORedis.Commands | null = null;
+    private _connection : IORedis.Redis | null = null;
+    // private _pubsubClient : redis.RedisClient | null = null;
 
     constructor(logger: ILogger, params? : RedisClientParams) {
         this._logger = logger.sublogger('RedisClient');
@@ -52,19 +56,16 @@ export class RedisClient {
         return this._logger;
     }
 
-    get client() {
-        return this._client;
-    }
-
-    get pubsubClient() {
-        return this._pubsubClient;
-    }
-
     run()
     {
-        this._client = this._createClient('primary');
-        this._pubsubClient = this._createClient('pubsub'); 
+        this._connection = this._createClient('primary');
+        this._commands = this._connection!;
     }
+
+    exec<T>(cb : ((x: IORedis.Commands) => globalThis.Promise<T>)) : Promise<T>
+    {
+        return Promise.resolve(cb(this._commands!));
+    } 
 
     string(name: string) : RedisStringClient
     {
@@ -90,41 +91,20 @@ export class RedisClient {
     {
         return new RedisHashSetClient(this, name);
     }
-    
-    exec_command(name: string, args: any)
-    {
-        this._logger.silly('[exec_command] %s :: ', name, args);
-
-        return Promise.construct<any>((resolve, reject) => {
-            this.client!.sendCommand(name, args, (err, value) => {
-                if (err) {
-                    reject(err)
-                } else {
-                    resolve(value)
-                }
-            })
-        })
-    }
 
     private _createClient(name: string)
     {
         this._logger.info('[_createClient] %s', name);
 
-        var client = redis.createClient(this._redisPort, this._redisHost, {
-            retry_strategy: function (options) {
-                if (options.error && options.error.code === 'ECONNREFUSED') {
-                    return new Error('The server refused the connection');
-                }
-                if (options.total_retry_time > 1000 * 60 * 60) {
-                    return new Error('Retry time exhausted');
-                }
-                if (options.attempt > 10) {
-                    return undefined;
-                }
+        const options : IORedis.RedisOptions = {
+            retryStrategy(times) {
+                return Math.min(times * times * 100, 5000);
+            }
+        }
+        options.host = this._redisHost;
+        options.port = this._redisPort;
 
-                return Math.min(options.attempt * 100, 3000);
-            },
-        })
+        let client = new IORedis.default(options)
 
         client.on('ready', () => {
             this._logger.info('[on-ready] %s', name);
@@ -148,22 +128,22 @@ export class RedisClient {
             this._logger.error('[on-error] %s', name, err);
         })
 
-        client.on('pmessage', (pattern, channel, message) => {
-            this.logger.info('[on-pmessage] (%s) client received message on %s: %s', pattern, channel, message)
+        // client.on('pmessage', (pattern, channel, message) => {
+        //     this.logger.info('[on-pmessage] (%s) client received message on %s: %s', pattern, channel, message)
 
-            var subscriberInfo = this._channels[channel];
-            if (subscriberInfo)
-            {
-                for(var cb of _.values(subscriberInfo.handlers))
-                {
-                    cb(message, channel, pattern);
-                }
-            }
-        })
+        //     let subscriberInfo = this._channels[channel];
+        //     if (subscriberInfo)
+        //     {
+        //         for(let cb of _.values(subscriberInfo.handlers))
+        //         {
+        //             cb(message, channel, pattern);
+        //         }
+        //     }
+        // })
 
-        client.on('punsubscribe', (pattern, count) => {
-            this.logger.info('[on-punsubscribe] from %s, %s total subscriptions', pattern, count);
-        });
+        // client.on('punsubscribe', (pattern, count) => {
+        //     this.logger.info('[on-punsubscribe] from %s, %s total subscriptions', pattern, count);
+        // });
 
         return client;
     }
@@ -171,113 +151,94 @@ export class RedisClient {
     close() {
         this._logger.info('Closing connection...')
         this._isClosed = true;
-        if (this._client) {
-            this._client.end(true);
-            this._client = null;
+        if (this._connection) {
+            this._connection.disconnect();
+            this._connection = null;
         }
-        if (this._pubsubClient) {
-            this._pubsubClient.end(true);
-            this._pubsubClient = null;
-        }
-    }
-
-    delete(key: string)
-    {
-        return this.exec_command('del', [key]);
     }
 
     setValue(key: string, value: any) {
-        return Promise.construct((resolve, reject) => {
-            this.client!.set(key, value, (err, result) => {
-                if (err) reject(err)
-                resolve(result)
-            })
-        })
+        return this.exec(x => x.set(key, value));
     }
 
     getValue(key: string) {
-        return Promise.construct((resolve, reject) => {
-            this.client!.get(key, (err, value) => {
-                if (err) reject(err)
-
-                resolve(value)
-            })
-        })
+        return this.exec(x => x.get(key));
     }
 
     deleteValue(key: string) {
-        return Promise.construct((resolve, reject) => {
-            this.client!.del(key, (err, value) => {
-                if (err) { reject(err); }
-                resolve(value)
-            })
-        })
+        return this.exec(x => x.del(key));
     }
 
-    filterValues(pattern: string, cb: (keys: any) => any) {
-        let cursor = '0'
+    filterValues(pattern: string, cb?: (keys: string[]) => any) {
+        return this._performScan('0', pattern, [], cb);
+    }
 
-        return Promise.construct((resolve, reject) => {
-            this.client!.scan(cursor, 'MATCH', pattern, 'COUNT', '100', (err: any, res: any) => {
-                cursor = res[0];
+    private _performScan(cursor: string, pattern: string, keys: string[], cb?: (keys: string[]) => any) : Promise<string[]>
+    {
+        return this.exec(x => x.scan(cursor, 'MATCH', pattern, 'COUNT', 100))
+            .then((res) => {
+                const newCursor = res[0];
+                const newKeys = res[1];
 
-                let keys = res[1];
-
-                if (cursor === '0') {
-                    return resolve(cb(keys))
+                if (cb) {
+                    cb(newKeys);
                 }
-
-                return this.client!.scan()
-            })
-        })
-    }
-
-    subscribe(channel: string, cb: (keys: any) => any) : RedisSubscription {
-        if (!this._channels[channel]) {
-            this._channels[channel] = {
-                handlers: {}
-            }
-        }
-        var id = uuidv4();
-        this._channels[channel].handlers[id] = cb;
-
-        if (_.keys(this._channels[channel].handlers).length == 1)
-        {
-            this.pubsubClient!.psubscribe(channel, (err, result) => {
-                if (err)
-                {
-                    this._logger.error('[subscribe] ', err);
+        
+                const finalKeys = _.concat(keys, newKeys);
+                if (newCursor === '0') {
+                    return finalKeys 
                 }
-            });
-        }
-
-        return {
-            close: () => {
-                if (this._channels[channel])
-                {
-                    if (this._channels[channel].handlers[id])
-                    {
-                        delete this._channels[channel].handlers[id];
-                        if (_.keys(this._channels[channel].handlers).length == 0)
-                        {
-                            delete this._channels[channel];
-                            this.pubsubClient!.punsubscribe(channel);
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    publishMessage(channel: string, message: string) {
-        return Promise.construct((resolve, reject) => {
-            this.pubsubClient!.publish(channel, message, (err, result) => {
-                if (err) reject(err)
-
-                resolve(result)
+        
+                return this._performScan(newCursor, pattern, finalKeys);
             })
-        })
     }
+
+    // subscribe(channel: string, cb: (keys: any) => any) : RedisSubscription {
+    //     if (!this._channels[channel]) {
+    //         this._channels[channel] = {
+    //             handlers: {}
+    //         }
+    //     }
+    //     let id = uuidv4();
+    //     this._channels[channel].handlers[id] = cb;
+
+    //     if (_.keys(this._channels[channel].handlers).length == 1)
+    //     {
+    //         this.pubsubClient!.psubscribe(channel, (err, result) => {
+    //             if (err)
+    //             {
+    //                 this._logger.error('[subscribe] ', err);
+    //             }
+    //         });
+    //     }
+
+    //     return {
+    //         close: () => {
+    //             if (this._channels[channel])
+    //             {
+    //                 if (this._channels[channel].handlers[id])
+    //                 {
+    //                     delete this._channels[channel].handlers[id];
+    //                     if (_.keys(this._channels[channel].handlers).length == 0)
+    //                     {
+    //                         delete this._channels[channel];
+    //                         this.pubsubClient!.punsubscribe(channel);
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
+
+    // publishMessage(channel: string, message: string) {
+    //     return Promise.construct((resolve, reject) => {
+    //         this.pubsubClient!.publish(channel, message, (err, result) => {
+    //             if (err) reject(err)
+
+    //             resolve(result)
+    //         })
+    //     })
+    // }
 
 }
 

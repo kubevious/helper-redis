@@ -1,0 +1,113 @@
+version: '2'
+services:
+  redis-node-0:
+    image: docker.io/bitnami/redis-cluster:6.2
+    networks:
+      - helper-redis    
+    volumes:
+      - redis-cluster_data-0:/bitnami/redis/data
+    environment:
+      - 'ALLOW_EMPTY_PASSWORD=yes'
+      - 'REDIS_NODES=redis-node-0 redis-node-1 redis-node-2 redis-node-3 redis-node-4 redis-node-5'
+    ports:
+      - '6479:6379'
+
+  redis-node-1:
+    image: docker.io/bitnami/redis-cluster:6.2
+    networks:
+      - helper-redis
+    volumes:
+      - redis-cluster_data-1:/bitnami/redis/data
+    environment:
+      - 'ALLOW_EMPTY_PASSWORD=yes'
+      - 'REDIS_NODES=redis-node-0 redis-node-1 redis-node-2 redis-node-3 redis-node-4 redis-node-5'
+    ports:
+      - '6480:6379'
+
+  redis-node-2:
+    image: docker.io/bitnami/redis-cluster:6.2
+    networks:
+      - helper-redis
+    volumes:
+      - redis-cluster_data-2:/bitnami/redis/data
+    environment:
+      - 'ALLOW_EMPTY_PASSWORD=yes'
+      - 'REDIS_NODES=redis-node-0 redis-node-1 redis-node-2 redis-node-3 redis-node-4 redis-node-5'
+    ports:
+      - '6481:6379'
+
+  redis-node-3:
+    image: docker.io/bitnami/redis-cluster:6.2
+    networks:
+      - helper-redis
+    volumes:
+      - redis-cluster_data-3:/bitnami/redis/data
+    environment:
+      - 'ALLOW_EMPTY_PASSWORD=yes'
+      - 'REDIS_NODES=redis-node-0 redis-node-1 redis-node-2 redis-node-3 redis-node-4 redis-node-5'
+    ports:
+      - '6482:6379'
+
+  redis-node-4:
+    image: docker.io/bitnami/redis-cluster:6.2
+    networks:
+      - helper-redis
+    volumes:
+      - redis-cluster_data-4:/bitnami/redis/data
+    environment:
+      - 'ALLOW_EMPTY_PASSWORD=yes'
+      - 'REDIS_NODES=redis-node-0 redis-node-1 redis-node-2 redis-node-3 redis-node-4 redis-node-5'
+    ports:
+      - '6483:6379'
+
+  redis-node-5:
+    image: docker.io/bitnami/redis-cluster:6.2
+    networks:
+      - helper-redis
+    volumes:
+      - redis-cluster_data-5:/bitnami/redis/data
+    depends_on:
+      - redis-node-0
+      - redis-node-1
+      - redis-node-2
+      - redis-node-3
+      - redis-node-4
+    environment:
+      - 'ALLOW_EMPTY_PASSWORD=yes'
+      - 'REDIS_CLUSTER_REPLICAS=1'
+      - 'REDIS_NODES=redis-node-0 redis-node-1 redis-node-2 redis-node-3 redis-node-4 redis-node-5'
+      - 'REDIS_CLUSTER_CREATOR=yes'
+    ports:
+      - '6484:6379'
+
+
+
+  helper-redis-ui:
+    container_name: helper-redis-ui
+    networks:
+      - helper-redis
+    hostname: helper-redis-ui
+    image: rediscommander/redis-commander:latest
+    restart: always
+    environment:
+    - REDIS_HOSTS=local:redis-node-0:6379,local:redis-node-1:6379,local:redis-node-2:6379,local:redis-node-3:6379,local:redis-node-4:6379,local:redis-node-5:6379
+    ports:
+    - "5180:8081"      
+
+volumes:
+  redis-cluster_data-0:
+    driver: local
+  redis-cluster_data-1:
+    driver: local
+  redis-cluster_data-2:
+    driver: local
+  redis-cluster_data-3:
+    driver: local
+  redis-cluster_data-4:
+    driver: local
+  redis-cluster_data-5:
+    driver: local
+
+networks:
+  helper-redis:
+    external: true

@@ -14,7 +14,7 @@ export class RedisSetClient extends RedisBaseClient
         if (!_.isArray(valueOrArray)) {
             valueOrArray = [valueOrArray];
         }
-        return this.client.exec_command('sadd', [this.name, ...valueOrArray]);
+        return this.exec(x => x.sadd(this.name, valueOrArray));
     }
 
     remove(valueOrArray: any)
@@ -22,22 +22,22 @@ export class RedisSetClient extends RedisBaseClient
         if (!_.isArray(valueOrArray)) {
             valueOrArray = [valueOrArray];
         }
-        return this.client.exec_command('srem', [this.name, ...valueOrArray]);
+        return this.exec(x => x.srem(this.name, valueOrArray));
     }
 
     pop()
     {
-        return this.client.exec_command('spop', [this.name]);
+        return this.exec(x => x.spop(this.name));
     }
 
     members()
     {
-        return this.client.exec_command('smembers', [this.name]);
+        return this.exec(x => x.smembers(this.name));
     }
 
     count() : Promise<number>
     {
-        return this.client.exec_command('scard', [this.name])
+        return this.exec(x => x.scard(this.name))
             .then(result => {
                 if (!result) {
                     return 0;
@@ -46,18 +46,18 @@ export class RedisSetClient extends RedisBaseClient
             });
     }
     
-    diff(other: any)
+    diff(other: string)
     {
-        return this.client.exec_command('sdiff', [this.name, other]);
+        return this.exec(x => x.sdiff(this.name, other));
     }
 
-    union(other: any)
+    union(other: string)
     {
-        return this.client.exec_command('sdiff', [this.name, other]);
+        return this.exec(x => x.sdiff(this.name, other));
     }
 
-    intersect(other: any)
+    intersect(other: string)
     {
-        return this.client.exec_command('sinter', [this.name, other]);
+        return this.exec(x => x.sinter(this.name, other));
     }
 }

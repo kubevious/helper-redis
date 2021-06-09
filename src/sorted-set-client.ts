@@ -14,12 +14,12 @@ export class RedisSortedSetClient extends RedisBaseClient
         if (!_.isArray(valueOrArray)) {
             valueOrArray = [valueOrArray];
         }
-        var params = [this.name];
-        for(var x of valueOrArray) {
+        let params : string[] = [];
+        for(let x of valueOrArray) {
             params.push(x.score);
             params.push(x.value);
         }
-        return this.client.exec_command('zadd', params);
+        return this.exec(x => x.zadd(this.name, params));
     }
 
     remove(valueOrArray: any)
@@ -27,23 +27,27 @@ export class RedisSortedSetClient extends RedisBaseClient
         if (!_.isArray(valueOrArray)) {
             valueOrArray = [valueOrArray];
         }
-        return this.client.exec_command('zrem', [this.name, ...valueOrArray]);
+        return this.exec(x => x.zrem(this.name, valueOrArray));
     }
 
     popMin()
     {
-        return this._pop('zpopmin');
+        return this.exec(x => x.zpopmin(this.name))
+            .then((result) => {
+                if (!result.length) {
+                    return null;
+                }
+                return {
+                    value: result[0],
+                    score: result[1]
+                }
+            });
     }
 
     popMax()
     {
-        return this._pop('zpopmax');
-    }
-
-    private _pop(cmd: string)
-    {
-        return this.client.exec_command(cmd, [this.name])
-            .then((result: any) => {
+        return this.exec(x => x.zpopmax(this.name))
+            .then((result) => {
                 if (!result.length) {
                     return null;
                 }
@@ -62,7 +66,7 @@ export class RedisSortedSetClient extends RedisBaseClient
         if (_.isUndefined(end)) {
             end = -1;
         }
-        return this.client.exec_command('zrange', [this.name, start, end]);
+        return this.exec(x => x.zrange(this.name, start!, end!));
     }
 
     rangeWithScores(start?: number, end?: number)
@@ -73,10 +77,10 @@ export class RedisSortedSetClient extends RedisBaseClient
         if (_.isUndefined(end)) {
             end = -1;
         }
-        return this.client.exec_command('zrange', [this.name, start, end, 'withscores'])
+        return this.exec(x => x.zrange(this.name, start!, end!, 'WITHSCORES'))
             .then((res: any) => {
-                var finalResult = [];
-                for(var i = 0; i < res.length; i += 2)
+                let finalResult = [];
+                for(let i = 0; i < res.length; i += 2)
                 {
                     finalResult.push({
                         value: res[i],
@@ -90,9 +94,9 @@ export class RedisSortedSetClient extends RedisBaseClient
     count(min?: number, max?: number)
     {
         if (_.isUndefined(min) && _.isUndefined(max)) {
-            return this.client.exec_command('zcard', [this.name]);
+            return this.exec(x => x.zcard(this.name));
         } else {
-            return this.client.exec_command('zcount', [this.name, min, max]);
+            return this.exec(x => x.zcount(this.name, min!, max!));
         }
     }
 }

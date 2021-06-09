@@ -137,6 +137,7 @@ describe('string-client', () => {
         const stringClient = client.string('my-str-key-4');
 
         return stringClient.set('test-1234', { expireSeconds: 60 })
+            .then(() => Promise.timeout(2000))
             .then(() => stringClient.ttl() )
             .then(res => {
                 should(res.exists).be.equal(true);
@@ -151,7 +152,7 @@ describe('string-client', () => {
                 should(res.ttlSeconds).be.equal(0);
             })
             .then(() => client.close())
-    })
+    }).timeout(10 * 1000)
 
     it('expire-non-existing', () => {
         const client = new RedisClient(logger);

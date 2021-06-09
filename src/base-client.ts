@@ -1,4 +1,5 @@
 import { RedisClient } from './redis-client';
+import * as IORedis from 'ioredis'
 
 export class RedisBaseClient 
 {
@@ -15,26 +16,32 @@ export class RedisBaseClient
         return this._name;
     }
 
-    get client() {
-        return this._client;
-    }
+    // get client() {
+    //     return this._client;
+    // }
+
+    exec<T>(cb : ((x: IORedis.Commands) => globalThis.Promise<T>)) : Promise<T>
+    {
+        return this._client.exec(cb);
+    } 
+
 
     exists()
     {
-        return this._client.exec_command('exists', [this._name])
-            .then((res: any) => {
+        return this.exec(x => x.exists(this._name))
+            .then((res: number) => {
                 return (res == 1);
             });
     }
 
     delete()
     {
-        return this._client.exec_command('del', [this._name]);
+        return this.exec(x => x.del(this._name));
     }
 
     ttl() : Promise<TTLResult>
     {
-        return this._client.exec_command('ttl', [this._name])
+        return this.exec(x => x.ttl(this._name))
             .then((res: number) => {
                 if (res >= 0) {
                     return {
@@ -63,10 +70,10 @@ export class RedisBaseClient
 
     expire(seconds: number) : Promise<boolean>
     {
-        return this._client.exec_command('expire', [this._name, seconds])
-        .then((res: number) => {
-            return (res == 1);
-        });
+        return this.exec(x => x.expire(this._name, seconds))
+            .then((res: number) => {
+                return (res == 1);
+            });
     }
 
 }
