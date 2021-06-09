@@ -1,3 +1,4 @@
+import { Promise } from 'the-promise';
 import { RedisClient } from './redis-client';
 import * as IORedis from 'ioredis'
 
@@ -24,7 +25,6 @@ export class RedisBaseClient
     {
         return this._client.exec(cb);
     } 
-
 
     exists()
     {

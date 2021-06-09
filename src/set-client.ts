@@ -35,7 +35,7 @@ export class RedisSetClient extends RedisBaseClient
         return this.exec(x => x.smembers(this.name));
     }
 
-    count() : Promise<number>
+    count()
     {
         return this.exec(x => x.scard(this.name))
             .then(result => {
