@@ -186,6 +186,7 @@ describe('sorted-set-client', () => {
             })
             .then(() => client.close());
     })
+    .timeout(50 * 1000)
 
     it('count', () => {
         const client = new RedisClient(logger);

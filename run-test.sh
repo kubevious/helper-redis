@@ -6,4 +6,6 @@ cd $MY_DIR
 export REDIS_HOST=127.0.0.1
 export REDIS_PORT=5179
 
+echo "SETUP USING: ./redis/start.sh"
+
 npm test $@

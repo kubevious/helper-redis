@@ -2,8 +2,6 @@ import _ from 'the-lodash'
 import { Promise, Resolvable } from 'the-promise';
 import { ILogger } from 'the-logger';
 
-
-// import * as redis from 'redis';
 import * as IORedis from 'ioredis'
 
 import  { v4 as uuidv4 }  from 'uuid';
@@ -13,43 +11,87 @@ import { RedisListClient } from './list-client';
 import { RedisSetClient } from './set-client';
 import { RedisSortedSetClient } from './sorted-set-client';
 import { RedisHashSetClient } from './hash-set-client';
+import { EventEmitter } from 'stream';
+import { RedisClientParams, RedisClusterNodeInfo, RedisClusterParams } from './types';
 
 (<any>IORedis).Promise = Promise;
-export interface RedisClientParams {
-    port?: number,
-    host?: string
-}
 
 export type PubSubHandler = (message: string, channel: string, pattern: string) => any;
 
+const REDIS_DEFAULT_PORT = 6379;
+
 export class RedisClient {
     private _logger : ILogger;
-    private _redisPort : number;
-    private _redisHost? : string;
+
+    private _params : RedisClientParams;
 
     private _isClosed : boolean = false;
-    // private _channels : Record<string, { handlers: Record<string, PubSubHandler> }> = {};
 
     private _commands : IORedis.Commands | null = null;
+    
     private _connection : IORedis.Redis | null = null;
-    // private _pubsubClient : redis.RedisClient | null = null;
+    private _clusterConnection : IORedis.Cluster | null = null;
+    
 
-    constructor(logger: ILogger, params? : RedisClientParams) {
+    constructor(logger: ILogger, params? : Partial<RedisClientParams>) {
         this._logger = logger.sublogger('RedisClient');
         this._logger.info('Client created...')
 
         params = params || {}
         params = _.clone(params);
 
-        let redisParams = _.defaults(params, {
-            host: process.env.REDIS_HOST,
-            port: process.env.REDIS_PORT,
-        });
-        redisParams = _.defaults(redisParams, {
-            port: 6379
-        })
-        this._redisPort = parseInt(redisParams.port!);
-        this._redisHost = redisParams.host;
+        const isCluster = params.isCluster || getEnvBool('REDIS_CLUSTER') || false;
+
+        if (isCluster)
+        {
+            if (params.nodes) {
+                this._params = {
+                    isCluster: true,
+                    nodes: params.nodes
+                }
+            } else {
+                const HOST_PREFIX = "REDIS_HOST_";
+                const PORT_PREFIX = "REDIS_PORT_";
+                const NAT_PREFIX = "REDIS_NAT_";
+                const nodesDict : Record<string, RedisClusterNodeInfo> = {};
+                for(let hostEnv of _.keys(process.env).filter(x => _.startsWith(x, HOST_PREFIX)))
+                {
+                    let id = hostEnv.substring(HOST_PREFIX.length);
+        
+                    const hostValue = getEnvString(hostEnv)!;
+                    
+                    const portEnv = PORT_PREFIX + id;
+                    const portValue = getEnvInt(portEnv);
+        
+                    const natEnv = NAT_PREFIX + id;
+                    const natValue = getEnvString(natEnv);
+        
+                    if (!nodesDict[id]) {
+                        nodesDict[id] = {
+                            host: hostValue,
+                            port: portValue || REDIS_DEFAULT_PORT,
+                            nat: natValue
+                        }
+                    }
+                }
+
+                this._params = {
+                    isCluster: true,
+                    nodes: _.values(nodesDict)
+                }
+            }
+        }
+        else
+        {
+            this._params = {
+                isCluster: false,
+                host: params.host || getEnvString('REDIS_HOST') || 'localhost',
+                port: params.port || getEnvInt('REDIS_PORT') || REDIS_DEFAULT_PORT,
+                nodes: []
+            }
+        }
+
+        this._logger.info('Params: ', this._params);
     }
 
     get logger() {
@@ -58,13 +100,53 @@ export class RedisClient {
 
     run()
     {
-        this._connection = this._createClient('primary');
-        this._commands = this._connection!;
+        if (this._params.isCluster)
+        {
+            this._clusterConnection = this._createClusterClient('primary');
+            this._commands = this._clusterConnection!;
+        }
+        else
+        {
+            this._connection = this._createClient('primary');
+            this._commands = this._connection!;
+        }
+
+        // Promise.resolve()
+        //     .then(() => {
+        //         if (this._params.isCluster)
+        //         {
+        //             return this._clusterConnection!.connect();
+        //         }
+        //         else
+        //         {
+        //             return this._connection!.connect();
+        //         }
+        //     })
+        //     .then(() => {
+        //         this.logger.info("CONNECTED!!!");
+        //         return null;
+        //     })
+        //     .catch(reason => {
+        //         this.logger.error("ERRROR!!!", reason);;
+        //     })
     }
 
     exec<T>(cb : ((x: IORedis.Commands) => globalThis.Promise<T>)) : Promise<T>
     {
         return Promise.resolve(cb(this._commands!));
+    } 
+
+    execInCluster<T>(cb : ((x: IORedis.Commands) => globalThis.Promise<T>)) : Promise<T[]>
+    {
+        if (!this._params.isCluster) {
+            return this.exec(cb)
+                .then(result => {
+                    return [result];
+                })
+        }
+        return Promise.serial(this._clusterConnection!.nodes(), x => {
+            return Promise.resolve(cb(x));
+        });
     } 
 
     string(name: string) : RedisStringClient
@@ -101,11 +183,54 @@ export class RedisClient {
                 return Math.min(times * times * 100, 5000);
             }
         }
-        options.host = this._redisHost;
-        options.port = this._redisPort;
+        options.host = this._params.host;
+        options.port = this._params.port;
 
         let client = new IORedis.default(options)
+        this._setupHandlers(name, client);
 
+        return client;
+    }
+
+    private _createClusterClient(name: string)
+    {
+        this._logger.info('[_createClusterClient] %s', name);
+
+        const nodes : IORedis.NodeConfiguration[] = [];
+
+        const options : IORedis.ClusterOptions = {
+            clusterRetryStrategy(times) {
+                return Math.min(times * times * 100, 5000);
+            },
+            natMap: {}
+        }
+
+        const params = <RedisClusterParams>this._params;
+        for(let node of params.nodes)
+        {
+            nodes.push({
+                host: node.host,
+                port: node.port
+            });
+
+            if (node.nat) {
+                options.natMap![node.nat] = {
+                    host: node.host,
+                    port: node.port
+                }
+            }
+        }
+
+        // this.logger.info("FINAL CONFIG: ", nodes, options);
+
+        let client = new IORedis.Cluster(nodes, options)
+        this._setupHandlers(name, client);
+
+        return client;
+    }
+
+    private _setupHandlers(name: string, client: EventEmitter)
+    {
         client.on('ready', () => {
             this._logger.info('[on-ready] %s', name);
         })
@@ -127,25 +252,6 @@ export class RedisClient {
             }
             this._logger.error('[on-error] %s', name, err);
         })
-
-        // client.on('pmessage', (pattern, channel, message) => {
-        //     this.logger.info('[on-pmessage] (%s) client received message on %s: %s', pattern, channel, message)
-
-        //     let subscriberInfo = this._channels[channel];
-        //     if (subscriberInfo)
-        //     {
-        //         for(let cb of _.values(subscriberInfo.handlers))
-        //         {
-        //             cb(message, channel, pattern);
-        //         }
-        //     }
-        // })
-
-        // client.on('punsubscribe', (pattern, count) => {
-        //     this.logger.info('[on-punsubscribe] from %s, %s total subscriptions', pattern, count);
-        // });
-
-        return client;
     }
 
     close() {
@@ -154,6 +260,10 @@ export class RedisClient {
         if (this._connection) {
             this._connection.disconnect();
             this._connection = null;
+        }
+        if (this._clusterConnection) {
+            this._clusterConnection.disconnect();
+            this._clusterConnection = null;
         }
     }
 
@@ -169,13 +279,20 @@ export class RedisClient {
         return this.exec(x => x.del(key));
     }
 
-    filterValues(pattern: string, cb?: (keys: string[]) => any) {
-        return this._performScan('0', pattern, [], cb);
+    filterValues(pattern: string, cb?: (keys: string[]) => any)
+    {
+        const resultData : Record<string, boolean> = {};
+        return this.execInCluster(x => {
+            return this._performScan(x, '0', pattern, resultData, cb);
+        })
+        .then(() => {
+            return _.keys(resultData);
+        })
     }
 
-    private _performScan(cursor: string, pattern: string, keys: string[], cb?: (keys: string[]) => any) : Promise<string[]>
+    private _performScan(cluster: IORedis.Commands, cursor: string, pattern: string, resultData : Record<string, boolean>, cb?: (keys: string[]) => any) : Promise<void>
     {
-        return this.exec(x => x.scan(cursor, 'MATCH', pattern, 'COUNT', 100))
+        return Promise.resolve(cluster.scan(cursor, 'MATCH', pattern, 'COUNT', 100))
             .then((res) => {
                 const newCursor = res[0];
                 const newKeys = res[1];
@@ -183,66 +300,50 @@ export class RedisClient {
                 if (cb) {
                     cb(newKeys);
                 }
-        
-                const finalKeys = _.concat(keys, newKeys);
+
+                for(let key of newKeys)
+                {
+                    resultData[key] = true;
+                }
+
                 if (newCursor === '0') {
-                    return finalKeys 
+                    return;
                 }
         
-                return this._performScan(newCursor, pattern, finalKeys);
+                return this._performScan(cluster, newCursor, pattern, resultData);
             })
     }
-
-    // subscribe(channel: string, cb: (keys: any) => any) : RedisSubscription {
-    //     if (!this._channels[channel]) {
-    //         this._channels[channel] = {
-    //             handlers: {}
-    //         }
-    //     }
-    //     let id = uuidv4();
-    //     this._channels[channel].handlers[id] = cb;
-
-    //     if (_.keys(this._channels[channel].handlers).length == 1)
-    //     {
-    //         this.pubsubClient!.psubscribe(channel, (err, result) => {
-    //             if (err)
-    //             {
-    //                 this._logger.error('[subscribe] ', err);
-    //             }
-    //         });
-    //     }
-
-    //     return {
-    //         close: () => {
-    //             if (this._channels[channel])
-    //             {
-    //                 if (this._channels[channel].handlers[id])
-    //                 {
-    //                     delete this._channels[channel].handlers[id];
-    //                     if (_.keys(this._channels[channel].handlers).length == 0)
-    //                     {
-    //                         delete this._channels[channel];
-    //                         this.pubsubClient!.punsubscribe(channel);
-    //                     }
-    //                 }
-    //             }
-    //         }
-    //     }
-    // }
-
-    // publishMessage(channel: string, message: string) {
-    //     return Promise.construct((resolve, reject) => {
-    //         this.pubsubClient!.publish(channel, message, (err, result) => {
-    //             if (err) reject(err)
-
-    //             resolve(result)
-    //         })
-    //     })
-    // }
 
 }
 
 export interface RedisSubscription
 {
     close: () => void
+}
+
+function getEnvString(name: string) : string | undefined
+{
+    const val = process.env[name];
+    if (_.isUndefined(val)) {
+        return undefined;
+    }
+    return val;
+}
+
+function getEnvBool(name: string) : boolean | undefined
+{
+    const val = getEnvString(name);
+    if (_.isUndefined(val)) {
+        return undefined;
+    }
+    return (val == 'true');
+}
+
+function getEnvInt(name: string) : number | undefined
+{
+    const val = getEnvString(name);
+    if (_.isUndefined(val)) {
+        return undefined;
+    }
+    return parseInt(val);
 }

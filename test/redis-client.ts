@@ -57,13 +57,16 @@ describe('Redis client', () => {
             .then(() => client.setValue('city:la', 'LA'))
             .then(() => client.setValue('city:moscow', 'Moscow'))
             .then(() => client.setValue('town:rostov', 'Rostov'))
+            .then(() => Promise.timeout(1000))
             .then(() => client.filterValues('city:*'))
             .then((keys) => {
+                console.log(keys);
                 should(keys).be.an.Array()
                 should((<any[]>keys).length).be.equal(3)
             })
             .then(() => client.close())
     })
+    .timeout(5000)
 
     it('filter-values-keys-big', () => {
         const client = new RedisClient(logger);
@@ -80,6 +83,7 @@ describe('Redis client', () => {
                     return client.setValue(x, expectedValues[x]);
                 })
             })
+            .then(() => Promise.timeout(1000))
             .then(() => client.filterValues('filter:*'))
             .then((keys) => {
                 should(keys).be.an.Array()
@@ -87,5 +91,6 @@ describe('Redis client', () => {
             })
             .then(() => client.close())
     })
+    .timeout(5000)
 
 })

@@ -7,5 +7,5 @@ docker network create helper-redis
 
 docker-compose up -d --build
 
-echo "Redis Cluster Listening on: 6479-6479"
+echo "Redis Cluster Listening on: 6479-6484"
 echo "Redis Commander UI: http://localhost:5180"
