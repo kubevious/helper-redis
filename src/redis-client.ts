@@ -11,6 +11,8 @@ import { RedisListClient } from './list-client';
 import { RedisSetClient } from './set-client';
 import { RedisSortedSetClient } from './sorted-set-client';
 import { RedisHashSetClient } from './hash-set-client';
+import { RedisearchClient } from './redisearch-client'
+
 import { EventEmitter } from 'stream';
 import { RedisClientParams, RedisClusterNodeInfo, RedisClusterParams } from './types';
 
@@ -100,6 +102,7 @@ export class RedisClient {
 
     run()
     {
+        
         if (this._params.isCluster)
         {
             this._clusterConnection = this._createClusterClient('primary');
@@ -110,25 +113,6 @@ export class RedisClient {
             this._connection = this._createClient('primary');
             this._commands = this._connection!;
         }
-
-        // Promise.resolve()
-        //     .then(() => {
-        //         if (this._params.isCluster)
-        //         {
-        //             return this._clusterConnection!.connect();
-        //         }
-        //         else
-        //         {
-        //             return this._connection!.connect();
-        //         }
-        //     })
-        //     .then(() => {
-        //         this.logger.info("CONNECTED!!!");
-        //         return null;
-        //     })
-        //     .catch(reason => {
-        //         this.logger.error("ERRROR!!!", reason);;
-        //     })
     }
 
     exec<T>(cb : ((x: IORedis.Commands) => globalThis.Promise<T>)) : Promise<T>
@@ -148,6 +132,27 @@ export class RedisClient {
             return Promise.resolve(cb(x));
         });
     } 
+
+    execCustom(command: string, args: any[], options?: ExecCommandOptions)
+    {
+        if (!this._connection) {
+            return Promise.reject("Not Connected");
+        }
+        // this.logger.info("[execCustom] begin: %s, args:", command, args);
+        return this._connection?.send_command(command, ...args)
+            .catch(reason => {
+                if (options) {
+                    if (options.handleError) {
+                        return options.handleError(reason);
+                    }
+                }
+                throw reason;
+            })
+            // .then(result => {
+            //     this.logger.info("[execCustom] end: %s, Result:", command, result);
+            //     return result;
+            // })
+    }
 
     string(name: string) : RedisStringClient
     {
@@ -174,6 +179,11 @@ export class RedisClient {
         return new RedisHashSetClient(this, name);
     }
 
+    get redisearch() : RedisearchClient
+    {
+        return new RedisearchClient(this);
+    }
+
     private _createClient(name: string)
     {
         this._logger.info('[_createClient] %s', name);
@@ -188,6 +198,8 @@ export class RedisClient {
 
         let client = new IORedis.default(options)
         this._setupHandlers(name, client);
+
+        client.send_command
 
         return client;
     }
@@ -346,4 +358,8 @@ function getEnvInt(name: string) : number | undefined
         return undefined;
     }
     return parseInt(val);
+}
+
+export interface ExecCommandOptions {
+    handleError? : (reason: any) => any;
 }

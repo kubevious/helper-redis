@@ -2,7 +2,8 @@ version: '3.3'
 services:
 
   helper-redis:
-    image: 'redis:latest'
+    # image: 'redis:latest'
+    image: 'redislabs/redisearch:latest'
     container_name: helper-redis
     networks:
       - helper-redis
