@@ -26,7 +26,8 @@ describe('redisearch', () => {
                 items.push({
                     id: `tenant:${tenant}:app:${app}`,
                     tenant: tenant,
-                    app: app
+                    app: app,
+                    kind: 'abcd'
                 })
             }
         }
@@ -51,7 +52,11 @@ describe('redisearch', () => {
                         name: 'tenant' 
                     },
                     {
-                        name: 'app' 
+                        name: 'app'
+                    },
+                    {
+                        name: 'kind',
+                        type: 'TAG'
                     },
                 ])
             })
@@ -99,5 +104,92 @@ describe('redisearch', () => {
             })
             .then(() => client.close());
     })
+
+
+    it('list', () => {
+
+        const client = new RedisClient(logger);
+        client.run();
+
+        const redisSearchIndexClient = client.redisearch.index('list.test');
+        
+        return Promise.resolve()
+            .then(() => {
+                return redisSearchIndexClient.delete();
+            })
+            .then(() => {
+                return redisSearchIndexClient.create({
+                    count: 1,
+                    prefix: 'tenant:'
+                }, [
+                    {
+                        name: 'tenant' 
+                    },
+                    {
+                        name: 'app'
+                    },
+                    {
+                        name: 'kind',
+                        type: 'TAG'
+                    },
+                ])
+            })
+            .then(() => {
+                return client.redisearch.list();
+            })
+            .then(result => {
+                const index = _.indexOf(result, 'list.test');
+                should(index).not.equal(-1);
+            })
+            .then(() => client.close())
+            ;
+            
+    })
+
+
+    it('info', () => {
+
+        const client = new RedisClient(logger);
+        client.run();
+
+        const redisSearchIndexClient = client.redisearch.index('info.test');
+        
+        return Promise.resolve()
+            .then(() => {
+                return redisSearchIndexClient.delete();
+            })
+            .then(() => {
+                return redisSearchIndexClient.create({
+                    count: 1,
+                    prefix: 'tenant:'
+                }, [
+                    {
+                        name: 'tenant' 
+                    },
+                    {
+                        name: 'app',
+                        isSortable: true
+                    },
+                    {
+                        name: 'kind',
+                        type: 'TAG'
+                    },
+                ])
+            })
+            .then(() => {
+                return redisSearchIndexClient.info();
+            })
+            .then(result => {
+                should(result).be.ok();
+                should(result.fields).be.ok();
+                should(result.fields['tenant']).be.ok();
+                should(result.fields['app']).be.ok();
+                should(result.fields['kind']).be.ok();
+            })
+            .then(() => client.close())
+            ;
+            
+    })
+
 
 })

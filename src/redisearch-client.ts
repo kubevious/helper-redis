@@ -15,7 +15,15 @@ export class RedisearchClient
     {
         return new RedisearchIndexClient(this._client, name);
     }
-    
+
+    list()
+    {
+        return this._client.execCustom('FT._LIST', [])
+            .then(result => {
+                return <string[]>result;
+            })
+    }
+
 }
 
 export class RedisearchIndexClient
@@ -44,11 +52,13 @@ export class RedisearchIndexClient
         for(let field of fields)
         {
             args.push(field.name);
-            args.push('TEXT')
-            args.push('SORTABLE')
 
-            // rating NUMERIC SORTABLE
-            // genre TAG SORTABLE
+            const type = field.type || 'TEXT';
+            args.push(type)
+
+            if (field.isSortable) {
+                args.push('SORTABLE')
+            }
         }
 
         return this._client.execCustom('FT.CREATE', args, {
@@ -136,6 +146,46 @@ export class RedisearchIndexClient
         ;
     }
 
+    info()
+    {
+        return this._client.execCustom('FT.INFO', [this._name])
+            .then(result => {
+                if (!_.isArray(result)) {
+                    throw new Error("Unknown info result");
+                }
+
+                const info : Record<string, any> = makeDictFromArray(result, (key, value) => {
+
+                    if (key === 'gc_stats') {
+                        return makeDictFromArray(value, (key, value) => parseInt(value));
+                    }
+                    if (key === 'cursor_stats') {
+                        return makeDictFromArray(value);
+                    }
+                    if (key === 'fields') {
+                        return _.makeDict(value, x => x[0], x => x);
+                    }
+
+                    if (_.startsWith(key, 'num_'))
+                    {
+                        return parseInt(value);
+                    }
+
+                    if ( _.endsWith(key, 'mb') || _.endsWith(key, 'avg') || _.startsWith(key, 'percent'))
+                    {
+                        return parseFloat(value);
+                    }
+
+                    return value;
+                });
+
+                return info;
+            })
+            ;
+    }
+
+    //  idx.name
+
 }
 
 export interface PrefixParams {
@@ -145,6 +195,9 @@ export interface PrefixParams {
 
 export interface IndexField {
     name: string,
+    type?: 'TEXT' | 'TAG' | 'NUMBERIC' | 'GEO',
+    
+    isSortable?: boolean,
 }
 
 export interface SearchPaging {
@@ -163,4 +216,21 @@ export interface SearchResultItem {
 
 export interface SearchResult {
     items: SearchResultItem[];
+}
+
+function makeDictFromArray(arr : string[], massageValue? : (key: string, value: any) => any) : Record<string, any>
+{
+    const dict : Record<string, any> = {};
+
+    for(let i = 0; i < arr.length; i+=2)
+    {
+        const key = arr[i];
+        let value = arr[i+1];
+        if (massageValue) {
+            value = massageValue(key, value);
+        }
+        dict[key] = value;
+    }
+
+    return dict;
 }
