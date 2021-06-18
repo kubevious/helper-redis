@@ -103,17 +103,31 @@ export class RedisearchIndexClient
     }
 
 
-    search(query: string, pagination?: SearchPaging) : Promise<SearchResult>
+    search(query: string, options?: SearchOptions) : Promise<SearchResult>
     {
+        options = options || {};
+        options.pagination = options.pagination || {};
+
         const args : any[] = [
             this._name,
             query
         ]
 
-        pagination = pagination || {}
         args.push('LIMIT');
-        args.push(pagination.first || 0);
-        args.push(pagination.number || 100);
+        args.push(options.pagination.first || 0);
+        args.push(options.pagination.number || 100);
+
+        if (options.fields) {
+            if (options.fields.length == 0) {
+                args.push('NOCONTENT');
+            } else {
+                args.push('RETURN');
+                args.push(options.fields.length);
+                for(let x of options.fields) {
+                    args.push(x);
+                }
+            }
+        }
 
         return this._client.execCustom('FT.SEARCH', args)
         .then(result => {
@@ -201,6 +215,11 @@ export interface IndexField {
 export interface SearchPaging {
     first?: number,
     number?: number 
+}
+
+export interface SearchOptions {
+    pagination?: SearchPaging,
+    fields?: string[]
 }
 
 export interface CommandResult {

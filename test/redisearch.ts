@@ -102,6 +102,17 @@ describe('redisearch', () => {
                 should(result.items.length).be.equal(1);
                 should(result.items[0].key).be.equal('tenant:coke:app:elephant');
             })
+            .then(() => redisSearchIndexClient.search('coke', {
+                fields: ['app']
+            }))
+            .then(result => {
+                should(result.items.length).be.equal(4);
+                for(let x of result.items)
+                {
+                    should(_.keys(x.value).length).be.equal(1);
+                    should(_.keys(x.value)).be.eql(['app']);
+                }
+            })
             .then(() => client.close());
     })
 
@@ -190,6 +201,7 @@ describe('redisearch', () => {
             ;
             
     })
+
 
 
 })
