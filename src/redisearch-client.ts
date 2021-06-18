@@ -184,8 +184,6 @@ export class RedisearchIndexClient
             ;
     }
 
-    //  idx.name
-
 }
 
 export interface PrefixParams {
@@ -195,7 +193,7 @@ export interface PrefixParams {
 
 export interface IndexField {
     name: string,
-    type?: 'TEXT' | 'TAG' | 'NUMBERIC' | 'GEO',
+    type?: 'TEXT' | 'TAG' | 'NUMERIC' | 'GEO',
     
     isSortable?: boolean,
 }

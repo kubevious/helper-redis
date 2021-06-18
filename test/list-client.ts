@@ -18,7 +18,7 @@ describe('list-client', () => {
 
         const listClient = client.list('my-list');
 
-        return Promise.resolve()
+        return client.waitConnect()
             .then(() => listClient.delete() )
             .then(() => listClient.push('item1') )
             .then(res => {
@@ -41,7 +41,7 @@ describe('list-client', () => {
 
         const listClient = client.list('my-list');
 
-        return Promise.resolve()
+        return client.waitConnect()
             .then(() => listClient.delete() )
             .then(() => listClient.push('item1') )
             .then(res => {
@@ -68,7 +68,7 @@ describe('list-client', () => {
 
         const listClient = client.list('my-list');
 
-        return Promise.resolve()
+        return client.waitConnect()
             .then(() => listClient.delete() )
             .then(() => listClient.push('item1') )
             .then(res => {
@@ -95,7 +95,7 @@ describe('list-client', () => {
 
         const listClient = client.list('my-list');
 
-        return Promise.resolve()
+        return client.waitConnect()
             .then(() => listClient.delete() )
             .then(() => listClient.push('item1') )
             .then(() => listClient.push('item2') )
@@ -121,7 +121,7 @@ describe('list-client', () => {
 
         const listClient = client.list('my-list');
 
-        return Promise.resolve()
+        return client.waitConnect()
             .then(() => listClient.delete() )
             .then(() => listClient.push('item1') )
             .then(() => listClient.push('item2') )
@@ -150,7 +150,7 @@ describe('list-client', () => {
 
         const listClient = client.list('my-list');
 
-        return Promise.resolve()
+        return client.waitConnect()
             .then(() => listClient.delete() )
             .then(() => listClient.push('item1') )
             .then(() => listClient.push('item2') )
@@ -179,7 +179,7 @@ describe('list-client', () => {
 
         const listClient = client.list('my-list');
 
-        return Promise.resolve()
+        return client.waitConnect()
             .then(() => listClient.delete() )
             .then(() => {
                 return Promise.serial(Array.from({length: 200}, (x, i) => i), x => {
@@ -216,7 +216,7 @@ describe('list-client', () => {
 
         const listClient = client.list('my-list');
 
-        return Promise.resolve()
+        return client.waitConnect()
             .then(() => listClient.delete() )
             .then(() => listClient.count() )
             .then(res => {
@@ -232,7 +232,7 @@ describe('list-client', () => {
 
         const listClient = client.list('my-list');
 
-        return Promise.resolve()
+        return client.waitConnect()
             .then(() => listClient.delete() )
             .then(() => listClient.range(0, 100) )
             .then(res => {
@@ -248,7 +248,7 @@ describe('list-client', () => {
 
         const listClient = client.list('my-list');
         
-        return Promise.resolve()
+        return client.waitConnect()
             .then(() => listClient.delete() )
             .then(() => listClient.push('item-1') )
             .then(() => listClient.ttl() )
@@ -267,7 +267,7 @@ describe('list-client', () => {
 
         const listClient = client.list('my-list-exp');
         
-        return Promise.resolve()
+        return client.waitConnect()
             .then(() => listClient.delete() )
             .then(() => listClient.push('item-1') )
             .then(() => listClient.expire(22) )

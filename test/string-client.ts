@@ -17,7 +17,7 @@ describe('string-client', () => {
 
         const stringClient = client.string('my-key');
 
-        return Promise.resolve()
+        return client.waitConnect()
             .then(() => stringClient.delete() )
             .then(() => stringClient.set('my-value'))
             .then(() => stringClient.get() )
@@ -33,7 +33,7 @@ describe('string-client', () => {
 
         const stringClient = client.string('my-key');
 
-        return Promise.resolve()
+        return client.waitConnect()
             .then(() => stringClient.delete() )
             .then(() => stringClient.set('my-value'))
             .then(() => stringClient.delete() )
@@ -51,7 +51,7 @@ describe('string-client', () => {
 
         const stringClient = client.string('my-key');
 
-        return Promise.resolve()
+        return client.waitConnect()
             .then(() => stringClient.delete() )
             .then(() => stringClient.set('my-value'))
             .then(() => stringClient.exists() )
@@ -67,7 +67,7 @@ describe('string-client', () => {
 
         const stringClient = client.string('my-key');
 
-        return Promise.resolve()
+        return client.waitConnect()
             .then(() => stringClient.delete() )
             .then(() => stringClient.exists() )
             .then(res => {

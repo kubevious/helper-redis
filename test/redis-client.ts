@@ -18,6 +18,24 @@ describe('Redis client', () => {
         client.close()
     })
 
+    it('HandleConnect', () => {
+        const client = new RedisClient(logger);
+
+        let isConnected : boolean = false;
+        client.handleConnect(() => {
+            isConnected = true;
+        })
+
+        client.run();
+        should(isConnected).be.false();
+
+        return client.waitConnect()
+            .then(() => {
+                should(isConnected).be.true();
+            })
+            .then(() => client.close())
+    })
+
     it('set value', () => {
         const client = new RedisClient(logger);
         client.run();
@@ -52,7 +70,7 @@ describe('Redis client', () => {
         const client = new RedisClient(logger);
         client.run();
 
-        return Promise.resolve()
+        return client.waitConnect()
             .then(() => client.setValue('city:nyc', 'NYC'))
             .then(() => client.setValue('city:la', 'LA'))
             .then(() => client.setValue('city:moscow', 'Moscow'))
@@ -77,7 +95,7 @@ describe('Redis client', () => {
             expectedValues['filter:mykey' + i] = 'myvalue' + i;
         }
 
-        return Promise.resolve()
+        return client.waitConnect()
             .then(() => {
                 return Promise.serial(_.keys(expectedValues), x => {
                     return client.setValue(x, expectedValues[x]);

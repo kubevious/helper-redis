@@ -34,7 +34,7 @@ describe('redisearch', () => {
 
         const redisSearchIndexClient = client.redisearch.index('index.test');
 
-        return Promise.resolve()
+        return client.waitConnect()
             .then(() => {
                 return Promise.serial(items, item => {
                     return client.hashSet(item.id).set(item);
@@ -113,7 +113,7 @@ describe('redisearch', () => {
 
         const redisSearchIndexClient = client.redisearch.index('list.test');
         
-        return Promise.resolve()
+        return client.waitConnect()
             .then(() => {
                 return redisSearchIndexClient.delete();
             })
@@ -154,7 +154,7 @@ describe('redisearch', () => {
 
         const redisSearchIndexClient = client.redisearch.index('info.test');
         
-        return Promise.resolve()
+        return client.waitConnect()
             .then(() => {
                 return redisSearchIndexClient.delete();
             })

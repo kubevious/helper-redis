@@ -20,7 +20,7 @@
 //         var subscription : RedisSubscription;
 //         var messages : string[] = [];
 
-//         return Promise.resolve()
+//         return client.waitConnect()
 //             .then(() => {
 //                 subscription = subscribeClient.subscribe('channel_one', (message) => {
 //                     messages.push(message);

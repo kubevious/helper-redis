@@ -18,7 +18,7 @@ describe('hash-set-client', () => {
 
         const hashSetClient = client.hashSet('my-obj');
 
-        return Promise.resolve()
+        return client.waitConnect()
             .then(() => hashSetClient.delete() )
             .then(() => hashSetClient.set({
                 name: 'car',
@@ -40,7 +40,7 @@ describe('hash-set-client', () => {
 
         const hashSetClient = client.hashSet('my-obj');
 
-        return Promise.resolve()
+        return client.waitConnect()
             .then(() => hashSetClient.delete() )
             .then(() => hashSetClient.set({
                 name: 'car',
@@ -59,7 +59,7 @@ describe('hash-set-client', () => {
 
         const hashSetClient = client.hashSet('my-obj');
 
-        return Promise.resolve()
+        return client.waitConnect()
             .then(() => hashSetClient.delete() )
             .then(() => hashSetClient.set({
                 name: 'car',
@@ -81,7 +81,7 @@ describe('hash-set-client', () => {
 
         const hashSetClient = client.hashSet('my-obj');
 
-        return Promise.resolve()
+        return client.waitConnect()
             .then(() => hashSetClient.delete() )
             .then(() => hashSetClient.set({
                 name: 'car',
@@ -100,7 +100,7 @@ describe('hash-set-client', () => {
 
         const hashSetClient = client.hashSet('my-obj');
 
-        return Promise.resolve()
+        return client.waitConnect()
             .then(() => hashSetClient.delete() )
             .then(() => hashSetClient.set({
                 name: 'car',

@@ -17,7 +17,7 @@ describe('set-client', () => {
 
         const setClient = client.set('my-set');
 
-        return Promise.resolve()
+        return client.waitConnect()
             .then(() => setClient.delete() )
             .then(() => setClient.add('item1') )
             .then(res => {
@@ -40,7 +40,7 @@ describe('set-client', () => {
 
         const setClient = client.set('my-set');
 
-        return Promise.resolve()
+        return client.waitConnect()
             .then(() => setClient.delete() )
             .then(() => setClient.add('item1') )
             .then(() => setClient.add(['item3', 'item2']))
@@ -62,7 +62,7 @@ describe('set-client', () => {
 
         const setClient = client.set('my-set');
 
-        return Promise.resolve()
+        return client.waitConnect()
             .then(() => setClient.delete() )
             .then(() => setClient.add('item1') )
             .then(() => setClient.add('item2') )
@@ -84,7 +84,7 @@ describe('set-client', () => {
 
         const setClient = client.set('my-set');
 
-        return Promise.resolve()
+        return client.waitConnect()
             .then(() => setClient.delete() )
             .then(() => setClient.add(['item1', 'item2', 'item3', 'item4']) )
             .then(() => setClient.count() )
@@ -106,7 +106,7 @@ describe('set-client', () => {
 
         const setClient = client.set('my-set');
 
-        return Promise.resolve()
+        return client.waitConnect()
             .then(() => setClient.delete() )
             .then(() => setClient.count() )
             .then(res => {
@@ -121,7 +121,7 @@ describe('set-client', () => {
 
         const setClient = client.set('my-set');
 
-        return Promise.resolve()
+        return client.waitConnect()
             .then(() => setClient.delete() )
             .then(() => setClient.members())
             .then(res => {

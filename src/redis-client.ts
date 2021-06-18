@@ -19,6 +19,7 @@ import { RedisClientParams, RedisClusterNodeInfo, RedisClusterParams } from './t
 (<any>IORedis).Promise = Promise;
 
 export type PubSubHandler = (message: string, channel: string, pattern: string) => any;
+export type ConnectHandler = () => any;
 
 const REDIS_DEFAULT_PORT = 6379;
 
@@ -33,6 +34,10 @@ export class RedisClient {
     
     private _connection : IORedis.Redis | null = null;
     private _clusterConnection : IORedis.Cluster | null = null;
+
+    private _isConnected : boolean = false;
+    private _connectHandlers: ConnectHandler[] = [];
+    private _tempConnectHandlers: ConnectHandler[] = [];
     
 
     constructor(logger: ILogger, params? : Partial<RedisClientParams>) {
@@ -112,6 +117,60 @@ export class RedisClient {
         {
             this._connection = this._createClient('primary');
             this._commands = this._connection!;
+        }
+    }
+
+    handleConnect(cb: ConnectHandler)
+    {
+        if (this._isConnected) {
+            this._connectHandlers.push(cb);
+        }
+
+        this._trigger(cb);
+    }
+
+    waitConnect()
+    {
+        if (this._isConnected) {
+            return Promise.resolve();
+        }
+
+        return Promise.construct<void>((resolve) => {
+            if (this._isConnected) {
+                resolve();
+            } else {
+                this._tempConnectHandlers.push(resolve);
+            }
+        })
+    }
+
+    private _trigger(cb: ConnectHandler)
+    {
+        Promise.resolve(null)
+            .then(() => {
+                return cb();
+            })
+            .catch(reason => {
+                this.logger.error("Error Handling Redis Connection: ", reason);
+            })
+            .then(() => {
+                return null;
+            })
+    }
+
+    private _triggerConnect()
+    {
+        const handlers = this._tempConnectHandlers;
+        this._tempConnectHandlers = [];
+        for(let cb of handlers)
+        {
+            this._trigger(cb);
+        }
+        
+
+        for(let cb of this._connectHandlers)
+        {
+            this._trigger(cb);
         }
     }
 
@@ -245,6 +304,7 @@ export class RedisClient {
     {
         client.on('ready', () => {
             this._logger.info('[on-ready] %s', name);
+            this._triggerConnect();
         })
 
         client.on('connect', () => {

@@ -17,7 +17,7 @@ describe('sorted-set-client', () => {
 
         const setClient = client.sortedSet('my-set');
 
-        return Promise.resolve()
+        return client.waitConnect()
             .then(() => setClient.delete() )
             .then(() => setClient.add({ score: 10, value: 'item1' }) )
             .then(res => {
@@ -40,7 +40,7 @@ describe('sorted-set-client', () => {
 
         const setClient = client.sortedSet('my-set');
 
-        return Promise.resolve()
+        return client.waitConnect()
             .then(() => setClient.delete() )
             .then(() => setClient.add({ score: 10, value: 'item1' }) )
             .then(() => setClient.add([{ score: 5, value: 'item2' }, { score: 20, value: 'item3' }, ]) )
@@ -61,7 +61,7 @@ describe('sorted-set-client', () => {
 
         const setClient = client.sortedSet('my-set');
 
-        return Promise.resolve()
+        return client.waitConnect()
             .then(() => setClient.delete() )
             .then(() => setClient.add([
                 { score: 10, value: 'item1' },
@@ -89,7 +89,7 @@ describe('sorted-set-client', () => {
 
         const setClient = client.sortedSet('my-set');
 
-        return Promise.resolve()
+        return client.waitConnect()
             .then(() => setClient.delete() )
             .then(() => setClient.popMin() )
             .then(res => {
@@ -104,7 +104,7 @@ describe('sorted-set-client', () => {
 
         const setClient = client.sortedSet('my-set');
 
-        return Promise.resolve()
+        return client.waitConnect()
             .then(() => setClient.delete() )
             .then(() => setClient.add([
                 { score: 10, value: 'item1' },
@@ -132,7 +132,7 @@ describe('sorted-set-client', () => {
 
         const setClient = client.sortedSet('my-set');
 
-        return Promise.resolve()
+        return client.waitConnect()
             .then(() => setClient.delete() )
             .then(() => setClient.popMax() )
             .then(res => {
@@ -147,7 +147,7 @@ describe('sorted-set-client', () => {
 
         const setClient = client.sortedSet('my-set');
 
-        return Promise.resolve()
+        return client.waitConnect()
             .then(() => setClient.delete() )
             .then(() => setClient.add([
                 { score: 10, value: 'item1' },
@@ -172,7 +172,7 @@ describe('sorted-set-client', () => {
 
         const setClient = client.sortedSet('my-set');
 
-        return Promise.resolve()
+        return client.waitConnect()
             .then(() => setClient.delete() )
             .then(() => setClient.add([
                 { score: 10, value: 'item1' },
@@ -194,7 +194,7 @@ describe('sorted-set-client', () => {
 
         const setClient = client.sortedSet('my-set');
 
-        return Promise.resolve()
+        return client.waitConnect()
             .then(() => setClient.delete() )
             .then(() => setClient.add([
                 { score: 10, value: 'item1' },
@@ -214,7 +214,7 @@ describe('sorted-set-client', () => {
 
         const setClient = client.sortedSet('my-set');
 
-        return Promise.resolve()
+        return client.waitConnect()
             .then(() => setClient.delete() )
             .then(() => setClient.count() )
             .then(res => {
@@ -229,7 +229,7 @@ describe('sorted-set-client', () => {
 
         const setClient = client.sortedSet('my-set');
 
-        return Promise.resolve()
+        return client.waitConnect()
             .then(() => setClient.delete() )
             .then(() => setClient.add([
                     { score: 10, value: 'item1' },
