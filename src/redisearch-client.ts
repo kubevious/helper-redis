@@ -160,6 +160,57 @@ export class RedisearchIndexClient
         ;
     }
 
+    aggregate(query: string, options?: AggregateOptions) : Promise<Record<string, any>[]>
+    {
+        options = options || {};
+        options.pagination = options.pagination || {};
+
+        const args : any[] = [
+            this._name,
+            query
+        ]
+
+        args.push('LIMIT');
+        args.push(options.pagination.first || 0);
+        args.push(options.pagination.number || 100);
+
+        if (options.groupBy) {
+            args.push('GROUPBY');
+            args.push(options.groupBy.length);
+            for(let x of options.groupBy) {
+                args.push(`@${x}`);
+            }
+        }
+
+        return this._client.execCustom('FT.AGGREGATE', args)
+        .then(result => {
+
+            if (!_.isArray(result)) {
+                throw new Error("Unknown search result");
+            }
+
+            const items: Record<string, any>[] = [];
+            
+            for(let i = 1; i < result.length; i++)
+            {
+                const payload = result[i];
+
+                const item : Record<string, any> = {};
+                for(let j = 0; j < payload.length; j+=2)
+                {
+                    const property : string = payload[j];
+                    item[property] = payload[j+1];
+                }
+
+                items.push(item);
+            }
+
+            return items;
+        })
+        ;
+    }
+
+
     info()
     {
         return this._client.execCustom('FT.INFO', [this._name])
@@ -220,6 +271,11 @@ export interface SearchPaging {
 export interface SearchOptions {
     pagination?: SearchPaging,
     fields?: string[]
+}
+
+export interface AggregateOptions {
+    pagination?: SearchPaging,
+    groupBy?: string[]
 }
 
 export interface CommandResult {

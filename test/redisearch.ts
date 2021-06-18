@@ -11,7 +11,7 @@ import { RedisClient }  from '../src';
 
 describe('redisearch', () => {
 
-    it('case-1', () => {
+    it('run-search-1', () => {
         const client = new RedisClient(logger);
         client.run();
 
@@ -112,6 +112,71 @@ describe('redisearch', () => {
                     should(_.keys(x.value).length).be.equal(1);
                     should(_.keys(x.value)).be.eql(['app']);
                 }
+            })
+            .then(() => client.close());
+    })
+
+
+    it('aggregate-1', () => {
+        const client = new RedisClient(logger);
+        client.run();
+
+        const tenants = [ 'coke', 'pepsi' ];
+        const apps = ['foo', 'bar', 'elephant', 'elegant'];
+
+        const items : any[] = [];
+        for(let tenant of tenants)
+        {
+            for(let app of apps)
+            {
+                items.push({
+                    id: `tenant:${tenant}:app:${app}`,
+                    tenant: tenant,
+                    app: app,
+                    kind: 'abcd'
+                })
+            }
+        }
+
+        const redisSearchIndexClient = client.redisearch.index('index.test');
+
+        return client.waitConnect()
+            .then(() => {
+                return Promise.serial(items, item => {
+                    return client.hashSet(item.id).set(item);
+                })            
+            })
+            .then(() => {
+                return redisSearchIndexClient.delete();
+            })
+            .then(() => {
+                return redisSearchIndexClient.create({
+                    count: 1,
+                    prefix: 'tenant:'
+                }, [
+                    {
+                        name: 'tenant' 
+                    },
+                    {
+                        name: 'app'
+                    },
+                    {
+                        name: 'kind',
+                        type: 'TAG'
+                    },
+                ])
+            })
+            .then(() => Promise.timeout(300))
+            .then(() => redisSearchIndexClient.aggregate('@app:ele*', { groupBy: ['app']}))
+            .then(result => {
+                should(result).be.eql([
+                    {
+                      "app": "elegant"
+                    },
+                    {
+                      "app": "elephant"
+                    }
+                ])
             })
             .then(() => client.close());
     })
