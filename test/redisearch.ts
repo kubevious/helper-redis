@@ -169,14 +169,12 @@ describe('redisearch', () => {
             .then(() => Promise.timeout(300))
             .then(() => redisSearchIndexClient.aggregate('@app:ele*', { groupBy: ['app']}))
             .then(result => {
-                should(result).be.eql([
+                const dict = _.makeDict(result, x => x['app'], x => true);
+                should(dict).be.eql(
                     {
-                      "app": "elegant"
-                    },
-                    {
-                      "app": "elephant"
-                    }
-                ])
+                        "elegant": true,
+                        "elephant": true,
+                    });
             })
             .then(() => client.close());
     })
