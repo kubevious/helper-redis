@@ -122,11 +122,11 @@ export class RedisClient {
 
     handleConnect(cb: ConnectHandler)
     {
-        if (this._isConnected) {
-            this._connectHandlers.push(cb);
-        }
+        this._connectHandlers.push(cb);
 
-        this._trigger(cb);
+        if (this._isConnected) {
+            this._trigger(cb);
+        }
     }
 
     waitConnect()
