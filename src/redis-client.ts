@@ -258,8 +258,6 @@ export class RedisClient {
         let client = new IORedis.default(options)
         this._setupHandlers(name, client);
 
-        client.send_command
-
         return client;
     }
 
