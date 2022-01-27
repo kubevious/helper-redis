@@ -255,10 +255,31 @@ describe('redisearch', () => {
             })
             .then(result => {
                 should(result).be.ok();
-                should(result.fields).be.ok();
-                should(result.fields['tenant']).be.ok();
-                should(result.fields['app']).be.ok();
-                should(result.fields['kind']).be.ok();
+                should(result!.fields).be.ok();
+                should(result!.fields['tenant']).be.ok();
+                should(result!.fields['app']).be.ok();
+                should(result!.fields['kind']).be.ok();
+            })
+            .then(() => client.close())
+            ;
+            
+    });
+
+
+
+    it('info-missing-index', () => {
+
+        const client = new RedisClient(logger);
+        client.run();
+
+        const redisSearchIndexClient = client.redisearch.index('info.testnotpresent');
+        
+        return client.waitConnect()
+            .then(() => {
+                return redisSearchIndexClient.info();
+            })
+            .then(result => {
+                should(result).be.null();
             })
             .then(() => client.close())
             ;

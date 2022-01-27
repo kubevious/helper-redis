@@ -210,13 +210,19 @@ export class RedisearchIndexClient
         ;
     }
 
-
     info()
     {
         return this._client.execCustom('FT.INFO', [this._name])
+            .catch(reason => {
+                if (reason.message == 'Unknown Index name') {
+                    return null;
+                }
+                this._client.logger.error("Error:", reason);
+                throw reason;
+            })
             .then(result => {
                 if (!_.isArray(result)) {
-                    throw new Error("Unknown info result");
+                    return null;
                 }
 
                 const info : Record<string, any> = makeDictFromArray(result, (key, value) => {
