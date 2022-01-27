@@ -236,6 +236,9 @@ export class RedisearchIndexClient
                     if (key === 'fields') {
                         return _.makeDict(value, x => x[0], x => x);
                     }
+                    if (key === 'attributes') {
+                        return _.makeDict(value, x => x[1], x => x);
+                    }
 
                     if (_.startsWith(key, 'num_'))
                     {

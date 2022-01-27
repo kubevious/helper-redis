@@ -3,7 +3,7 @@ services:
 
   helper-redis:
     # image: 'redis:latest'
-    image: 'redislabs/redisearch:latest'
+    image: 'redislabs/redisearch:2.2.6'
     container_name: helper-redis
     networks:
       - helper-redis

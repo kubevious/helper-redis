@@ -255,10 +255,7 @@ describe('redisearch', () => {
             })
             .then(result => {
                 should(result).be.ok();
-                should(result!.fields).be.ok();
-                should(result!.fields['tenant']).be.ok();
-                should(result!.fields['app']).be.ok();
-                should(result!.fields['kind']).be.ok();
+                should(result!.gc_stats).be.ok();
             })
             .then(() => client.close())
             ;
