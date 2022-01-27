@@ -44,8 +44,7 @@ steps:
     working_directory: "${{CICD_REPO_PATH}}"
     commands:
       - echo '//registry.npmjs.org/:_authToken=${NPM_TOKEN}' > ~/.npmrc
-      - env
-      - npm ci
+      - yarn install --frozen-lockfile
 
   compile:
     title: Compile
