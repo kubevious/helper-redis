@@ -105,6 +105,10 @@ export class RedisClient {
         return this._logger;
     }
 
+    get isConnected() {
+        return this._isConnected;
+    }
+
     run()
     {
         
