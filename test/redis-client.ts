@@ -22,8 +22,10 @@ describe('Redis client', () => {
         const client = new RedisClient(logger);
 
         let isConnected : boolean = false;
+        let isMarkedConnected : boolean = false;
         client.handleConnect(() => {
             isConnected = true;
+            isMarkedConnected = client.isConnected;
         })
 
         client.run();
@@ -32,8 +34,27 @@ describe('Redis client', () => {
         return client.waitConnect()
             .then(() => {
                 should(isConnected).be.true();
+                should(isMarkedConnected).be.true();
+                should(client.isConnected).be.true();
             })
             .then(() => client.close())
+    });
+
+
+    it('HandleDisconnect', () => {
+        const client = new RedisClient(logger);
+
+        client.run();
+
+        return client.waitConnect()
+            .then(() => {
+                should(client.isConnected).be.true();
+            })
+            .then(() => client.close())
+            .then(() => Promise.timeout(1000))
+            .then(() => {
+                should(client.isConnected).be.false();
+            })
     })
 
     it('set value', () => {

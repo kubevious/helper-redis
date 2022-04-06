@@ -61,9 +61,9 @@ export class RedisClient {
                 const PORT_PREFIX = "REDIS_PORT_";
                 const NAT_PREFIX = "REDIS_NAT_";
                 const nodesDict : Record<string, RedisClusterNodeInfo> = {};
-                for(let hostEnv of _.keys(process.env).filter(x => _.startsWith(x, HOST_PREFIX)))
+                for(const hostEnv of _.keys(process.env).filter(x => _.startsWith(x, HOST_PREFIX)))
                 {
-                    let id = hostEnv.substring(HOST_PREFIX.length);
+                    const id = hostEnv.substring(HOST_PREFIX.length);
         
                     const hostValue = getEnvString(hostEnv)!;
                     
@@ -106,6 +106,9 @@ export class RedisClient {
     }
 
     get isConnected() {
+        if (this._isClosed) {
+            return false;
+        }
         return this._isConnected;
     }
 
@@ -166,13 +169,12 @@ export class RedisClient {
     {
         const handlers = this._tempConnectHandlers;
         this._tempConnectHandlers = [];
-        for(let cb of handlers)
+        for(const cb of handlers)
         {
             this._trigger(cb);
         }
-        
 
-        for(let cb of this._connectHandlers)
+        for(const cb of this._connectHandlers)
         {
             this._trigger(cb);
         }
@@ -259,7 +261,7 @@ export class RedisClient {
         options.host = this._params.host;
         options.port = this._params.port;
 
-        let client = new IORedis.default(options)
+        const client = new IORedis.default(options)
         this._setupHandlers(name, client);
 
         return client;
@@ -279,7 +281,7 @@ export class RedisClient {
         }
 
         const params = <RedisClusterParams>this._params;
-        for(let node of params.nodes)
+        for(const node of params.nodes)
         {
             nodes.push({
                 host: node.host,
@@ -296,7 +298,7 @@ export class RedisClient {
 
         // this.logger.info("FINAL CONFIG: ", nodes, options);
 
-        let client = new IORedis.Cluster(nodes, options)
+        const client = new IORedis.Cluster(nodes, options)
         this._setupHandlers(name, client);
 
         return client;
@@ -306,6 +308,8 @@ export class RedisClient {
     {
         client.on('ready', () => {
             this._logger.info('[on-ready] %s', name);
+            this._isConnected = true;
+        
             this._triggerConnect();
         })
 
@@ -317,14 +321,26 @@ export class RedisClient {
             this._logger.info('[on-reconnect] %s', name);
         })
 
+        client.on('disconnect', () => {
+            this._logger.info('[on-disconnect] %s', name);
+        })
+
         client.on('error', (err) => {
-            if (this._isClosed) {
-                if (err.code == 'NR_CLOSED') {
-                    this._logger.warn('[on-error] %s :: %s', name, err.message);
-                    return;
+
+            if (!this._isClosed) {
+
+                this._logger.error('[on-error] %s :: code: %s, msg: %s', name, err.code, err.message);
+
+                // if (err.code == 'NR_CLOSED') {
+                //     this._logger.warn('[on-error] %s :: %s', name, err.message);
+                //     return;
+                // }
+
+                if (err.code == 'ECONNREFUSED') {
+                    this._isConnected = false;
                 }
             }
-            this._logger.error('[on-error] %s', name, err);
+
         })
     }
 
@@ -375,7 +391,7 @@ export class RedisClient {
                     cb(newKeys);
                 }
 
-                for(let key of newKeys)
+                for(const key of newKeys)
                 {
                     resultData[key] = true;
                 }
