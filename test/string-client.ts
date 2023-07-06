@@ -1,13 +1,13 @@
 import 'mocha';
-import should = require('should');
+import should from 'should';
 import _ from 'the-lodash';
-import { Promise } from 'the-promise';
 import { setupLogger, LoggerOptions } from 'the-logger';
 
 const loggerOptions = new LoggerOptions().enableFile(false).pretty(true);
 const logger = setupLogger('test', loggerOptions);
 
 import { RedisClient }  from '../src';
+import { MyPromise } from 'the-promise';
 
 describe('string-client', () => {
 
@@ -110,7 +110,7 @@ describe('string-client', () => {
                 should(res.hasExpiration).be.equal(true);
                 should(res.ttlSeconds).be.Number().and.greaterThanOrEqual(8).and.lessThanOrEqual(10);
             })
-            .then(() => Promise.timeout(3 * 1000))
+            .then(() => MyPromise.delay(3 * 1000))
             .then(() => stringClient.ttl() )
             .then(res => {
                 should(res.exists).be.equal(true);
@@ -119,7 +119,7 @@ describe('string-client', () => {
             })
             .then(() => {
                 logger.info("Waiting key to expire...");
-                return Promise.timeout(9 * 1000)
+                return MyPromise.delay(9 * 1000)
             })
             .then(() => stringClient.ttl() )
             .then(res => {
@@ -137,7 +137,7 @@ describe('string-client', () => {
         const stringClient = client.string('my-str-key-4');
 
         return stringClient.set('test-1234', { expireSeconds: 60 })
-            .then(() => Promise.timeout(2000))
+            .then(() => MyPromise.delay(2000))
             .then(() => stringClient.ttl() )
             .then(res => {
                 should(res.exists).be.equal(true);

@@ -1,10 +1,7 @@
 import _ from 'the-lodash'
-import { Promise, Resolvable } from 'the-promise';
 import { ILogger } from 'the-logger';
 
 import * as IORedis from 'ioredis'
-
-import  { v4 as uuidv4 }  from 'uuid';
 
 import { RedisStringClient } from './string-client';
 import { RedisListClient } from './list-client';
@@ -15,6 +12,7 @@ import { RedisearchClient } from './redisearch-client'
 
 import { EventEmitter } from 'stream';
 import { RedisClientParams, RedisClusterNodeInfo, RedisClusterParams } from './types';
+import { MyPromise } from 'the-promise';
 
 (<any>IORedis).Promise = Promise;
 
@@ -142,7 +140,7 @@ export class RedisClient {
             return Promise.resolve();
         }
 
-        return Promise.construct<void>((resolve) => {
+        return MyPromise.construct<void>((resolve) => {
             if (this._isConnected) {
                 resolve();
             } else {
@@ -193,7 +191,7 @@ export class RedisClient {
                     return [result];
                 })
         }
-        return Promise.serial(this._clusterConnection!.nodes(), x => {
+        return MyPromise.serial(this._clusterConnection!.nodes(), x => {
             return Promise.resolve(cb(x));
         });
     } 

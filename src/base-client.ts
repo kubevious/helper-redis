@@ -1,4 +1,3 @@
-import { Promise } from 'the-promise';
 import { RedisClient } from './redis-client';
 import * as IORedis from 'ioredis'
 

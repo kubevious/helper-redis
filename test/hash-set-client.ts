@@ -1,7 +1,6 @@
 import 'mocha';
-import should = require('should');
+import should from 'should';
 import _ from 'the-lodash';
-import { Promise } from 'the-promise';
 import { setupLogger, LoggerOptions } from 'the-logger';
 
 const loggerOptions = new LoggerOptions().enableFile(false).pretty(true);

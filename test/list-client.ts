@@ -1,13 +1,13 @@
 import 'mocha';
-import should = require('should');
+import should from 'should';
 import _ from 'the-lodash';
-import { Promise } from 'the-promise';
 import { setupLogger, LoggerOptions } from 'the-logger';
 
 const loggerOptions = new LoggerOptions().enableFile(false).pretty(true);
 const logger = setupLogger('test', loggerOptions);
 
 import { RedisClient }  from '../src';
+import { MyPromise } from 'the-promise';
 
 
 describe('list-client', () => {
@@ -182,7 +182,7 @@ describe('list-client', () => {
         return client.waitConnect()
             .then(() => listClient.delete() )
             .then(() => {
-                return Promise.serial(Array.from({length: 200}, (x, i) => i), x => {
+                return MyPromise.serial(Array.from({length: 200}, (x, i) => i), x => {
                     listClient.push('item' + (x+1));
                 })
             })

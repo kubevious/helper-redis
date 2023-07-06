@@ -1,13 +1,13 @@
 import 'mocha';
-import should = require('should');
+import should from 'should';
 import _ from 'the-lodash';
-import { Promise } from 'the-promise';
 import { setupLogger, LoggerOptions } from 'the-logger';
 
 const loggerOptions = new LoggerOptions().enableFile(false).pretty(true);
 const logger = setupLogger('test', loggerOptions);
 
 import { RedisClient }  from '../src';
+import { MyPromise } from 'the-promise';
 
 describe('Redis client', () => {
 
@@ -51,7 +51,7 @@ describe('Redis client', () => {
                 should(client.isConnected).be.true();
             })
             .then(() => client.close())
-            .then(() => Promise.timeout(1000))
+            .then(() => MyPromise.delay(1000))
             .then(() => {
                 should(client.isConnected).be.false();
             })
@@ -96,7 +96,7 @@ describe('Redis client', () => {
             .then(() => client.setValue('city:la', 'LA'))
             .then(() => client.setValue('city:moscow', 'Moscow'))
             .then(() => client.setValue('town:rostov', 'Rostov'))
-            .then(() => Promise.timeout(1000))
+            .then(() => MyPromise.delay(1000))
             .then(() => client.filterValues('city:*'))
             .then((keys) => {
                 console.log(keys);
@@ -118,11 +118,11 @@ describe('Redis client', () => {
 
         return client.waitConnect()
             .then(() => {
-                return Promise.serial(_.keys(expectedValues), x => {
+                return MyPromise.serial(_.keys(expectedValues), x => {
                     return client.setValue(x, expectedValues[x]);
                 })
             })
-            .then(() => Promise.timeout(1000))
+            .then(() => MyPromise.delay(1000))
             .then(() => client.filterValues('filter:*'))
             .then((keys) => {
                 should(keys).be.an.Array()

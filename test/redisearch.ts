@@ -1,7 +1,7 @@
 import 'mocha';
-import should = require('should');
+import should from 'should';
 import _ from 'the-lodash';
-import { Promise } from 'the-promise';
+import { MyPromise } from 'the-promise';
 import { setupLogger, LoggerOptions } from 'the-logger';
 
 const loggerOptions = new LoggerOptions().enableFile(false).pretty(true);
@@ -19,9 +19,9 @@ describe('redisearch', () => {
         const apps = ['foo', 'bar', 'elephant', 'elegant'];
 
         const items : any[] = [];
-        for(let tenant of tenants)
+        for(const tenant of tenants)
         {
-            for(let app of apps)
+            for(const app of apps)
             {
                 items.push({
                     id: `tenant:${tenant}:app:${app}`,
@@ -36,7 +36,7 @@ describe('redisearch', () => {
 
         return client.waitConnect()
             .then(() => {
-                return Promise.serial(items, item => {
+                return MyPromise.serial(items, item => {
                     return client.hashSet(item.id).set(item);
                 })            
             })
@@ -60,7 +60,7 @@ describe('redisearch', () => {
                     },
                 ])
             })
-            .then(() => Promise.timeout(300))
+            .then(() => MyPromise.delay(300))
             .then(() => redisSearchIndexClient.search('foo'))
             .then(result => {
                 should(result.items.length).be.equal(2);
@@ -107,7 +107,7 @@ describe('redisearch', () => {
             }))
             .then(result => {
                 should(result.items.length).be.equal(4);
-                for(let x of result.items)
+                for(const x of result.items)
                 {
                     should(_.keys(x.value).length).be.equal(1);
                     should(_.keys(x.value)).be.eql(['app']);
@@ -125,9 +125,9 @@ describe('redisearch', () => {
         const apps = ['foo', 'bar', 'elephant', 'elegant'];
 
         const items : any[] = [];
-        for(let tenant of tenants)
+        for(const tenant of tenants)
         {
-            for(let app of apps)
+            for(const app of apps)
             {
                 items.push({
                     id: `tenant:${tenant}:app:${app}`,
@@ -142,7 +142,7 @@ describe('redisearch', () => {
 
         return client.waitConnect()
             .then(() => {
-                return Promise.serial(items, item => {
+                return MyPromise.serial(items, item => {
                     return client.hashSet(item.id).set(item);
                 })            
             })
@@ -166,7 +166,7 @@ describe('redisearch', () => {
                     },
                 ])
             })
-            .then(() => Promise.timeout(300))
+            .then(() => MyPromise.delay(300))
             .then(() => redisSearchIndexClient.aggregate('@app:ele*', { groupBy: ['app']}))
             .then(result => {
                 const dict = _.makeDict(result, x => x['app'], x => true);
